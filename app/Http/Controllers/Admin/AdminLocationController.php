@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Location;
 
 class AdminLocationController extends Controller
@@ -40,12 +42,23 @@ class AdminLocationController extends Controller
             'website' => 'nullable|url',
             'hours' => 'nullable|string',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_our_pharmacy' => 'boolean',
             'is_24h' => 'boolean',
             'is_emergency_pharmacy' => 'boolean',
         ]);
 
-        Location::create($request->all());
+        $data = $request->all();
+        
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->storeAs('public/locations', $imageName);
+            $data['image'] = 'locations/' . $imageName;
+        }
+
+        Location::create($data);
 
         return redirect()->route('admin.locations.index')
             ->with('success', 'Location created successfully.');
@@ -82,12 +95,28 @@ class AdminLocationController extends Controller
             'website' => 'nullable|url',
             'hours' => 'nullable|string',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_our_pharmacy' => 'boolean',
             'is_24h' => 'boolean',
             'is_emergency_pharmacy' => 'boolean',
         ]);
 
-        $location->update($request->all());
+        $data = $request->all();
+        
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($location->image) {
+                Storage::disk('public')->delete($location->image);
+            }
+            
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->storeAs('public/locations', $imageName);
+            $data['image'] = 'locations/' . $imageName;
+        }
+
+        $location->update($data);
 
         return redirect()->route('admin.locations.index')
             ->with('success', 'Location updated successfully.');
@@ -132,5 +161,26 @@ class AdminLocationController extends Controller
         ];
 
         return response()->json($suggestions);
+    }
+
+    /**
+     * Run the pharmacie de garde scraping command
+     */
+    public function scrapePharmacieDeGarde(Request $request)
+    {
+        try {
+            // Run the scraping command
+            Artisan::call('scrape:pharmacie-de-garde');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Emergency pharmacies updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating pharmacies: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

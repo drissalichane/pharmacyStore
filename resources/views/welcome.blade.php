@@ -100,9 +100,9 @@
                 <div class="card-custom bg-white rounded-lg p-6 hover-lift scroll-animate">
                     <div class="text-center">
                         <div class="text-4xl mb-4">💊</div>
-                        <h3 class="text-lg font-semibold mb-2">Prescription Drugs</h3>
+                        <h3 class="text-lg font-semibold mb-2">Medications</h3>
                         <p class="text-sm text-gray-600 mb-4">Licensed prescription medications</p>
-                        <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary">Browse</a>
+                        <a href="{{ route('products.index', ['category' => 1]) }}" class="btn-custom btn-custom-primary">Browse</a>
                     </div>
                 </div>
                 
@@ -111,16 +111,16 @@
                         <div class="text-4xl mb-4">🌿</div>
                         <h3 class="text-lg font-semibold mb-2">Vitamins & Supplements</h3>
                         <p class="text-sm text-gray-600 mb-4">Natural health supplements</p>
-                        <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary">Browse</a>
+                        <a href="{{ route('products.index', ['category' => 4]) }}" class="btn-custom btn-custom-primary">Browse</a>
                     </div>
                 </div>
                 
                 <div class="card-custom bg-white rounded-lg p-6 hover-lift scroll-animate delay-200">
                     <div class="text-center">
                         <div class="text-4xl mb-4">🩹</div>
-                        <h3 class="text-lg font-semibold mb-2">First Aid</h3>
-                        <p class="text-sm text-gray-600 mb-4">Emergency and first aid supplies</p>
-                        <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary">Browse</a>
+                        <h3 class="text-lg font-semibold mb-2">Medical Supplies</h3>
+                        <p class="text-sm text-gray-600 mb-4">Emergency and medical supplies</p>
+                        <a href="{{ route('products.index', ['category' => 3]) }}" class="btn-custom btn-custom-primary">Browse</a>
                     </div>
                 </div>
                 
@@ -129,7 +129,7 @@
                         <div class="text-4xl mb-4">🧴</div>
                         <h3 class="text-lg font-semibold mb-2">Personal Care</h3>
                         <p class="text-sm text-gray-600 mb-4">Hygiene and personal care items</p>
-                        <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary">Browse</a>
+                        <a href="{{ route('products.index', ['category' => 2]) }}" class="btn-custom btn-custom-primary">Browse</a>
                     </div>
                 </div>
             </div>

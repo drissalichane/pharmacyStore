@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminLocationController;
+use App\Http\Controllers\Admin\AdminPharmacyImageController;
+use App\Http\Controllers\Admin\EmergencyInfoImageController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,6 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Emergency Info Image upload (admin)
+    Route::get('/admin/emergency-info-image/upload', [EmergencyInfoImageController::class, 'uploadForm'])->name('admin.emergency-info-image.upload-form');
+    Route::post('/admin/emergency-info-image/upload', [EmergencyInfoImageController::class, 'upload'])->name('admin.emergency-info-image.upload');
 });
 
 // Admin routes (require authentication and admin role)
@@ -60,6 +66,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Locations management
     Route::resource('locations', AdminLocationController::class);
     Route::get('locations/search/address', [AdminLocationController::class, 'searchAddress'])->name('locations.search-address');
+    Route::post('scrape-pharmacie-de-garde', [AdminLocationController::class, 'scrapePharmacieDeGarde'])->name('locations.scrape-pharmacie-de-garde');
+    
+    // Admin pharmacy image upload
+    Route::get('/pharmacy-image/upload', [AdminPharmacyImageController::class, 'uploadForm'])->name('pharmacy-image.upload-form');
+    Route::post('/pharmacy-image/upload', [AdminPharmacyImageController::class, 'upload'])->name('pharmacy-image.upload');
 });
 
 require __DIR__.'/auth.php';

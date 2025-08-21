@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Dashboard - Pharmacy Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -100,7 +101,7 @@
             </div>
 
             <!-- Locations Management -->
-            <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 relative">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">Locations Management</h2>
                 <div class="space-y-3">
                     <a href="{{ route('admin.locations.index') }}" class="block w-full bg-blue-600 text-white py-2 px-4 rounded-md text-center hover:bg-blue-700 transition-colors">
@@ -112,7 +113,57 @@
                     <button onclick="runScraping()" class="block w-full bg-orange-600 text-white py-2 px-4 rounded-md text-center hover:bg-orange-700 transition-colors">
                         Update Emergency Pharmacies
                     </button>
+                    {{-- Removed Upload Pharmacy Info Image button --}}
+                        <button onclick="document.getElementById('emergencyInfoImageModal').classList.remove('hidden')" class="block w-full bg-red-600 text-white py-2 px-4 rounded-md text-center hover:bg-red-700 transition-colors">
+                            Upload Emergency Info Image
+                        </button>
                 </div>
+                <!-- Modal Popup for Image Upload -->
+                    <!-- Modal Popup for Pharmacy Info Image Upload -->
+                    <div id="pharmacyImageModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
+                            <button onclick="document.getElementById('pharmacyImageModal').classList.add('hidden')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                            <h3 class="text-lg font-bold mb-4">Upload Pharmacy Info Image</h3>
+                            <form method="POST" action="{{ route('admin.pharmacy-image.upload') }}" enctype="multipart/form-data" class="space-y-4">
+                                @csrf
+                                <input type="file" name="pharmacy_image" accept="image/*" required class="block w-full border rounded p-2">
+                                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded w-full">Upload</button>
+                            </form>
+                            @php
+                                $imageUrl = \App\Http\Controllers\Admin\AdminPharmacyImageController::getLatestImageUrl();
+                            @endphp
+                            @if($imageUrl)
+                                <div class="mt-4">
+                                    <h4 class="text-sm font-semibold mb-2">Latest Uploaded Image:</h4>
+                                    <img src="{{ $imageUrl }}" alt="Pharmacy Info" class="rounded shadow w-full">
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Modal Popup for Emergency Info Image Upload -->
+                    <div id="emergencyInfoImageModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative overflow-y-auto max-h-[90vh]">
+                            <button onclick="document.getElementById('emergencyInfoImageModal').classList.add('hidden')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                            <h3 class="text-lg font-bold mb-4">Upload Emergency Info Image</h3>
+                            <form method="POST" action="{{ route('admin.emergency-info-image.upload') }}" enctype="multipart/form-data" class="space-y-4">
+                                @csrf
+                                <input type="file" name="emergency_info_image" accept="image/*" required class="block w-full border rounded p-2">
+                                <input type="text" name="title" placeholder="Title (optional)" class="block w-full border rounded p-2">
+                                <textarea name="description" placeholder="Description (optional)" class="block w-full border rounded p-2"></textarea>
+                                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded w-full">Upload</button>
+                            </form>
+                            @php
+                                $emergencyImageUrl = \App\Http\Controllers\Admin\EmergencyInfoImageController::getLatestImageUrl();
+                            @endphp
+                            @if($emergencyImageUrl)
+                                <div class="mt-4">
+                                    <h4 class="text-sm font-semibold mb-2">Latest Emergency Info Image:</h4>
+                                    <img src="{{ $emergencyImageUrl }}" alt="Emergency Info" class="rounded shadow w-full">
+                                </div>
+                            @endif
+                        </div>
+                    </div>
             </div>
 
             <!-- Orders Management -->
@@ -173,6 +224,8 @@
                 </div>
             </div>
         </div>
+
+    {{-- Removed Upload Pharmacy Info Image button below recent orders --}}
     </div>
 
     <!-- Footer -->
@@ -191,17 +244,33 @@
             button.textContent = 'Updating...';
             button.disabled = true;
             
-            // For now, just run the command directly
-            // In production, you'd make an AJAX call to a controller
-            alert('Emergency pharmacies updated successfully! Visit the map to see the changes.');
-            
-            // Reset button
-            setTimeout(() => {
+            // Make AJAX call to run the scraping command
+            fetch('/admin/scrape-pharmacie-de-garde', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Emergency pharmacies updated successfully! Visit the map to see the changes.');
+                } else {
+                    alert('Error updating pharmacies: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating pharmacies. Please try again.');
+            })
+            .finally(() => {
+                // Reset button
                 button.textContent = originalText;
                 button.disabled = false;
-            }, 2000);
+            });
         }
     }
     </script>
 </body>
-</html> 
+</html>
