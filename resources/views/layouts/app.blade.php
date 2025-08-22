@@ -100,5 +100,7 @@
             </div>
         </footer>
     </div>
+
+    @include('components.chat-popup')
 </body>
-</html> 
+</html>

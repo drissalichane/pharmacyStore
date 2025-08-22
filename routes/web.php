@@ -74,3 +74,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 require __DIR__.'/auth.php';
+
+// Chat (AI assistant) endpoints
+use App\Http\Controllers\ChatController;
+
+// Public chat message endpoint (throttled)
+Route::post('/chat/message', [ChatController::class, 'message'])->middleware('throttle:30,1')->name('chat.message');
+
