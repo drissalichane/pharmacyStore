@@ -17,17 +17,17 @@
                     <a href="/" class="text-2xl font-bold text-gradient">Pharmacy Store</a>
                 </div>
                 <div class="flex items-center space-x-6">
-                    <a href="{{ route('products.index') }}" class="text-gray-700 hover:text-blue-600 transition-colors">Products</a>
-                    <a href="/map" class="text-gray-700 hover:text-blue-600 transition-colors">Locations</a>
+                    <a href="{{ route('products.index') }}" class="text-gray-700 hover:text-green-700 transition-colors">Products</a>
+                    <a href="/map" class="text-gray-700 hover:text-green-700 transition-colors">Locations</a>
                     @auth
-                        <a href="{{ route('cart.index') }}" class="text-gray-700 hover:text-blue-600 transition-colors">Cart</a>
-                        <a href="{{ route('orders.index') }}" class="text-gray-700 hover:text-blue-600 transition-colors">Orders</a>
+                        <a href="{{ route('cart.index') }}" class="text-gray-700 hover:text-green-700 transition-colors">Cart</a>
+                        <a href="{{ route('orders.index') }}" class="text-gray-700 hover:text-green-700 transition-colors">Orders</a>
                         <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
-                            <button type="submit" class="text-gray-700 hover:text-blue-600 transition-colors">Logout</button>
+                            <button type="submit" class="text-gray-700 hover:text-green-700 transition-colors">Logout</button>
                         </form>
                     @else
-                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-blue-600 transition-colors">Login</a>
+                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-green-700 transition-colors">Login</a>
                         <a href="{{ route('register') }}" class="btn-custom btn-custom-primary">Register</a>
                     @endauth
                 </div>
@@ -36,7 +36,7 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="bg-gray-800 text-white py-16 lg:py-24">
+    <section class="bg-green-900 text-white py-16 lg:py-24">
         <div class="max-w-7xl mx-auto px-4">
             <div class="text-center max-w-4xl mx-auto">
                 <div class="scroll-animate">
@@ -46,7 +46,7 @@
                     </h1>
                 </div>
                 <div class="scroll-animate delay-100">
-                    <p class="text-xl mb-8 text-blue-100 max-w-3xl mx-auto">
+                    <p class="text-xl mb-8 text-green-100 max-w-3xl mx-auto">
                         Discover a wide range of healthcare products, from prescription medications to wellness supplements. 
                         Fast, reliable, and secure online pharmacy services.
                     </p>
@@ -154,7 +154,7 @@
                     </div>
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">Pain Relief</span>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Pain Relief</span>
                         </div>
                         <h3 class="font-semibold text-lg mb-2">Aspirin 500mg</h3>
                         <p class="text-gray-600 text-sm mb-3">Effective pain relief and fever reduction</p>
@@ -220,7 +220,7 @@
                     </div>
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">Personal Care</span>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Personal Care</span>
                         </div>
                         <h3 class="font-semibold text-lg mb-2">Hand Sanitizer</h3>
                         <p class="text-gray-600 text-sm mb-3">Kills 99.9% of germs and bacteria</p>
@@ -246,11 +246,11 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="py-12 bg-blue-600 text-white">
+    <section class="py-12 bg-green-900 text-white">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="scroll-animate">
                 <h2 class="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-                <p class="text-xl mb-8 text-blue-100">
+                <p class="text-xl mb-8 text-green-100">
                     Join thousands of satisfied customers who trust us with their healthcare needs
                 </p>
             </div>

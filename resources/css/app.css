@@ -9,11 +9,11 @@
 
 :root {
   /* Colors - Update these from your Figma design */
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-500: #3b82f6;
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
+  --primary-50: #eafbe1;
+  --primary-100: #cdf5ae;
+  --primary-500: #7cd36dff;
+  --primary-600: #388e3c;
+  --primary-700: #256c2b;
   
   --secondary-50: #f0fdf4;
   --secondary-100: #dcfce7;
@@ -96,8 +96,8 @@
   }
   
   .btn-custom:hover {
-    background: #8b5cf6 !important;
-    border-color: #8b5cf6 !important;
+    background: #34be27ff !important;
+    border-color: #34be27ff !important;
     color: white !important;
     box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
   }
@@ -372,3 +372,131 @@
     page-break-before: always;
   }
 }
+
+/* ===== THEME OVERRIDES: force green palette (uses --primary-* tokens) ===== */
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--primary-500) !important;
+  color: white !important;
+}
+.btn-primary:hover {
+  background-color: var(--primary-600) !important;
+}
+.btn-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 108, 43, 0.15);
+}
+
+.btn-outline {
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+  background: #fff !important;
+}
+.btn-outline:focus {
+  box-shadow: 0 0 0 3px rgba(89, 173, 75, 0.15);
+}
+
+/* Form focus */
+.form-input:focus {
+  box-shadow: 0 0 0 3px rgba(89, 173, 75, 0.12);
+  border-color: var(--primary-500);
+}
+
+/* Navigation */
+.nav-link:hover {
+  color: var(--primary-700) !important;
+}
+.nav-link-active {
+  font-weight: 600 !important;
+  color: var(--primary-700) !important;
+}
+
+/* Badges */
+.badge-primary {
+  background-color: var(--primary-100) !important;
+  color: var(--primary-700) !important;
+}
+
+/* Hero background gradient */
+.hero {
+  background: linear-gradient(to right, var(--primary-500), var(--primary-700)) !important;
+  color: white !important;
+}
+
+/* Custom transparent buttons hover -> green */
+.btn-custom:hover {
+  background: var(--primary-500) !important;
+  border-color: var(--primary-500) !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(89, 173, 75, 0.32) !important;
+}
+
+/* Text gradient utility */
+.text-gradient {
+  background: linear-gradient(to right, var(--primary-500), var(--primary-600)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ===== GLOBAL OVERRIDES: remap Tailwind blue/purple utilities -> green tokens ===== */
+
+/* Text colors */
+.text-blue-50, .text-blue-100, .text-blue-200, .text-blue-300, .text-blue-400, .text-blue-500, .text-blue-600, .text-blue-700, .text-blue-800, .text-blue-900 {
+  color: var(--primary-700) !important;
+}
+.text-blue-50 { color: var(--primary-50) !important; }
+.text-blue-100 { color: var(--primary-100) !important; }
+.text-blue-500 { color: var(--primary-500) !important; }
+.text-blue-600 { color: var(--primary-700) !important; }
+.text-blue-800 { color: var(--primary-700) !important; }
+
+/* Backgrounds */
+.bg-blue-50 { background-color: var(--primary-50) !important; }
+.bg-blue-100 { background-color: var(--primary-100) !important; }
+.bg-blue-200 { background-color: color-mix(in srgb, var(--primary-100) 60%, white 40%) !important; }
+.bg-blue-500, .bg-blue-600 { background-color: var(--primary-500) !important; }
+.bg-blue-700, .bg-blue-800 { background-color: var(--primary-600) !important; }
+
+/* Borders */
+.border-blue-50 { border-color: var(--primary-50) !important; }
+.border-blue-100 { border-color: var(--primary-100) !important; }
+.border-blue-200 { border-color: color-mix(in srgb, var(--primary-100) 70%, #ffffff 30%) !important; }
+
+/* Hover / focus utilities (escaped class names used by Tailwind) */
+.hover\:text-blue-600:hover, .hover\:text-blue-500:hover, .hover\:text-blue-800:hover { color: var(--primary-700) !important; }
+.hover\:bg-blue-700:hover, .hover\:bg-blue-600:hover { background-color: var(--primary-600) !important; }
+.group-hover\:text-blue-400.group-hover\:text-blue-400:hover, .group-hover\:text-blue-400:hover { color: var(--primary-500) !important; }
+
+/* Button focus/ring helpers */
+.focus\:ring-blue-500:focus, .focus\:ring-blue-400:focus { box-shadow: 0 0 0 3px rgba(89, 173, 75, 0.14) !important; }
+.focus\:border-blue-500:focus { border-color: var(--primary-500) !important; }
+
+/* Gradient helper classes used by Tailwind */
+.from-blue-600 { --tw-gradient-from: var(--primary-500) !important; }
+.to-blue-800 { --tw-gradient-to: var(--primary-700) !important; }
+.from-blue-600::before { --tw-gradient-from: var(--primary-500) !important; }
+.to-purple-600 { --tw-gradient-to: var(--primary-700) !important; }
+.bg-gradient-to-r.from-blue-600.to-blue-800 { background: linear-gradient(to right, var(--primary-500), var(--primary-700)) !important; }
+
+/* Utility combos used in templates */
+.text-blue-600.hover\:text-blue-800:hover { color: var(--primary-700) !important; }
+.bg-blue-600.text-white { background-color: var(--primary-500) !important; color: white !important; }
+
+/* Specific common icons / labels */
+.text-3xl.text-blue-600 { color: var(--primary-500) !important; }
+
+/* Make sure gradients/text-gradient use green */
+.text-gradient, .bg-gradient-to-r.from-blue-600, .bg-gradient-to-r.to-purple-600 {
+  background: linear-gradient(to right, var(--primary-500), var(--primary-700)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Fallback for hard-coded hex usages referencing purple */
+:where([style*="#8b5cf6"]) { color: var(--primary-700) !important; }
+:where([style*="#3b82f6"]) { color: var(--primary-500) !important; }
+:where([style*="#3B82F6"]) { color: var(--primary-500) !important; }
+
+/* End overrides */
