@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Dashboard - Pharmacy Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ asset('build/assets/ocr-ChomjTqJ.js') }}"></script>
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
@@ -161,6 +162,16 @@
                                     <h4 class="text-sm font-semibold mb-2">Latest Emergency Info Image:</h4>
                                     <img src="{{ $emergencyImageUrl }}" alt="Emergency Info" class="rounded shadow w-full">
                                 </div>
+                                <div class="mt-4">
+                                    <h4 class="text-sm font-semibold mb-2">Scanned Words:</h4>
+@php
+    $emergencyImageUrl = \App\Http\Controllers\Admin\EmergencyInfoImageController::getLatestImageUrl();
+@endphp
+<button onclick="performOCR('{{ $emergencyImageUrl }}')" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">Scan</button>
+                                    <div id="scannedWords" class="bg-gray-100 rounded-lg shadow-md p-4 w-full max-w-md text-gray-700">
+                                       <!-- Scanned words will be dynamically inserted here -->
+                                    </div>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -237,22 +248,38 @@
 
     <script>
     function runScraping() {
-        if (confirm('This will update emergency pharmacies from the syndicat website. Continue?')) {
+        if (confirm('This will update emergency pharmacies from the syndicat website. This may take a few minutes. Continue?')) {
             // Show loading state
             const button = event.target;
             const originalText = button.textContent;
             button.textContent = 'Updating...';
             button.disabled = true;
             
-            // Make AJAX call to run the scraping command
+            // Add loading spinner
+            const spinner = document.createElement('span');
+            spinner.className = 'ml-2 animate-spin';
+            spinner.innerHTML = '⏳';
+            button.appendChild(spinner);
+            
+            // Make AJAX call to run the scraping command with longer timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
+            
             fetch('/admin/scrape-pharmacie-de-garde', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+                },
+                signal: controller.signal
             })
-            .then(response => response.json())
+            .then(response => {
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     alert('Emergency pharmacies updated successfully! Visit the map to see the changes.');
@@ -262,15 +289,21 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error updating pharmacies. Please try again.');
+                if (error.name === 'AbortError') {
+                    alert('Request timed out. The scraping process may still be running in the background. Please check back later.');
+                } else {
+                    alert('Error updating pharmacies. Please try again or check the console for details.');
+                }
             })
             .finally(() => {
                 // Reset button
                 button.textContent = originalText;
                 button.disabled = false;
+                button.removeChild(spinner);
             });
         }
     }
+
     </script>
 </body>
 </html>

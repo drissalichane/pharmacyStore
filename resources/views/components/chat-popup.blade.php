@@ -16,7 +16,7 @@
 
   <!-- Floating icon -->
   <div>
-    <button id="chat-toggle" class="chat-btn" aria-label="Open chat">💬</button>
+    <button id="chat-toggle" class="chat-btn" aria-label="Open chat">AI Assistant💬</button>
   </div>
 
   <!-- Chat window -->
@@ -50,12 +50,20 @@
       chatClose.addEventListener('click', closeChat);
 
       function escapeHtml(unsafe){
-        return unsafe.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;");
+        return unsafe.replaceAll('&','&amp;').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"').replaceAll("'","&#039;");
       }
 
       function appendMessage(role, text){
         const d = document.createElement('div'); d.className = 'msg '+role;
-        const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.innerHTML = escapeHtml(text);
+        const bubble = document.createElement('div'); bubble.className = 'bubble';
+        
+        if (role === 'user') {
+          bubble.innerHTML = escapeHtml(text);
+        } else {
+          // For assistant messages, use the HTML-formatted response directly
+          bubble.innerHTML = text;
+        }
+        
         d.appendChild(bubble);
         chatMessages.appendChild(d);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -74,8 +82,13 @@
           });
 
           const json = await res.json();
-          if (json.error){ loadingIndex.querySelector('.bubble').innerHTML = '<em>'+escapeHtml(json.error)+'</em>'; }
-          else { loadingIndex.querySelector('.bubble').innerHTML = escapeHtml(json.message || JSON.stringify(json)); }
+          if (json.error){ 
+            loadingIndex.querySelector('.bubble').innerHTML = '<em>'+escapeHtml(json.error)+'</em>'; 
+          }
+          else { 
+            // Use the HTML-formatted response directly for assistant messages
+            loadingIndex.querySelector('.bubble').innerHTML = json.message || JSON.stringify(json); 
+          }
         }catch(e){ loadingIndex.querySelector('.bubble').innerHTML = '<em>Network error</em>'; }
       }
 

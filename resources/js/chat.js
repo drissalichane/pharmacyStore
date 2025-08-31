@@ -65,7 +65,8 @@
       if (json.error) {
         loadingNode.querySelector('div').innerHTML = '<em>Service unavailable</em>';
       } else {
-        loadingNode.querySelector('div').innerHTML = escapeHtml(json.message || json);
+        // For assistant messages, use the HTML-formatted response directly
+        loadingNode.querySelector('div').innerHTML = json.message || json;
       }
     } catch (e) {
       loadingNode.querySelector('div').innerHTML = '<em>Network error</em>';

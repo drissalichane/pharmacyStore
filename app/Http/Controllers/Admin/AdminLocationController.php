@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Location;
 
@@ -169,14 +170,29 @@ class AdminLocationController extends Controller
     public function scrapePharmacieDeGarde(Request $request)
     {
         try {
-            // Run the scraping command
-            Artisan::call('scrape:pharmacie-de-garde');
+            // Increase execution time for long-running process
+            set_time_limit(300); // 5 minutes
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Emergency pharmacies updated successfully'
-            ]);
+            // Run the scraping command
+            $exitCode = Artisan::call('scrape:pharmacie-de-garde');
+            
+            if ($exitCode === 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Emergency pharmacies updated successfully'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Scraping command failed with exit code: ' . $exitCode
+                ], 500);
+            }
         } catch (\Exception $e) {
+            Log::error('Pharmacie de garde scraping failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating pharmacies: ' . $e->getMessage()

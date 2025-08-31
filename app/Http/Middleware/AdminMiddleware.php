@@ -16,16 +16,14 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // For now, we'll allow any authenticated user to access admin
-        // In a real application, you'd check for admin role/permissions
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
-        // TODO: Add proper admin role checking
-        // if (!Auth::user()->isAdmin()) {
-        //     abort(403, 'Unauthorized access.');
-        // }
+        // Check if user has admin role
+        if (!Auth::user()->isAdmin()) {
+            abort(403, 'Unauthorized access. Admin privileges required.');
+        }
 
         return $next($request);
     }

@@ -14,6 +14,7 @@ class AiChatService
         $this->provider = env('AI_PROVIDER', 'gemini');
         $this->client = new Client([
             'timeout' => 30,
+            'verify' => env('SSL_VERIFY', true), // Allow SSL verification to be configured
         ]);
     }
 
@@ -37,13 +38,26 @@ class AiChatService
         $model = env('GEMINI_MODEL', 'gemini-2.0-flash');
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/'.$model.':generateContent';
 
+        // System prompt to guide the AI response style
+        $systemPrompt = "You are a helpful pharmacy assistant. Provide concise, helpful responses. 
+        - Format text using markdown: **bold** for emphasis, *italic* for subtle emphasis
+        - Keep responses brief and to the point (max 3-4 short paragraphs)
+        - For medical advice, always suggest consulting a pharmacist or doctor
+        - Use clear section headings with ## for main titles and ### for subtitles
+        - Avoid saying 'I'm an AI' or similar disclaimers
+        - Focus on providing helpful information while directing to professionals for medical advice";
+
         $payload = [
             'contents' => [
                 [
                     'parts' => [
-                        ['text' => $message]
+                        ['text' => $systemPrompt . "\n\nUser: " . $message]
                     ]
                 ]
+            ],
+            'generationConfig' => [
+                'maxOutputTokens' => 500, // Limit response length for chat popup
+                'temperature' => 0.7
             ]
         ];
 
