@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Location;
+use App\Models\PharmaciesArchive;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 // use Symfony\Component\DomCrawler\Crawler;
@@ -62,9 +63,41 @@ class ScrapePharmacieDeGarde extends Command
 
             if ($allPharmacies && count($allPharmacies) > 0) {
                 $this->info('Successfully scraped real data from website');
+                $scrapedAt = now();
                 foreach ($allPharmacies as $pharmacy) {
                     try {
+                        // Save to locations table
                         Location::create($pharmacy);
+
+                        // Also save to pharmacies_archive table
+                        $archiveData = $pharmacy;
+                        $archiveData['scraped_at'] = $scrapedAt;
+
+                        // Check for existing record with same relevant fields (excluding timestamps)
+                        $existingArchive = PharmaciesArchive::where('name', $archiveData['name'])
+                            ->where('address', $archiveData['address'])
+                            ->where('latitude', $archiveData['latitude'])
+                            ->where('longitude', $archiveData['longitude'])
+                            ->where('phone', $archiveData['phone'])
+                            ->where('email', $archiveData['email'])
+                            ->where('website', $archiveData['website'])
+                            ->where('hours', $archiveData['hours'])
+                            ->where('is_our_pharmacy', $archiveData['is_our_pharmacy'])
+                            ->where('is_24h', $archiveData['is_24h'])
+                            ->where('is_emergency_pharmacy', $archiveData['is_emergency_pharmacy'])
+                            ->where('description', $archiveData['description'])
+                            ->where('image', $archiveData['image'])
+                            ->first();
+
+                        if ($existingArchive) {
+                            // Update scraped_at timestamp if record exists but data is same
+                            $existingArchive->scraped_at = $scrapedAt;
+                            $existingArchive->save();
+                        } else {
+                            // Create new record if no matching record found
+                            PharmaciesArchive::create($archiveData);
+                        }
+
                         $this->info("Added: {$pharmacy['name']}");
                     } catch (\Exception $e) {
                         $this->warn("Failed to add pharmacy: " . $e->getMessage());
@@ -194,8 +227,39 @@ class ScrapePharmacieDeGarde extends Command
             ]
         ];
 
+        $scrapedAt = now();
         foreach ($emergencyPharmacies as $pharmacy) {
             Location::create($pharmacy);
+
+            // Also save to pharmacies_archive table
+            $archiveData = $pharmacy;
+            $archiveData['scraped_at'] = $scrapedAt;
+
+            // Check for existing record with same relevant fields (excluding timestamps)
+            $existingArchive = PharmaciesArchive::where('name', $archiveData['name'])
+                ->where('address', $archiveData['address'])
+                ->where('latitude', $archiveData['latitude'])
+                ->where('longitude', $archiveData['longitude'])
+                ->where('phone', $archiveData['phone'])
+                ->where('email', $archiveData['email'])
+                ->where('website', $archiveData['website'])
+                ->where('hours', $archiveData['hours'])
+                ->where('is_our_pharmacy', $archiveData['is_our_pharmacy'])
+                ->where('is_24h', $archiveData['is_24h'])
+                ->where('is_emergency_pharmacy', $archiveData['is_emergency_pharmacy'])
+                ->where('description', $archiveData['description'])
+                ->where('image', $archiveData['image'])
+                ->first();
+
+            if ($existingArchive) {
+                // Update scraped_at timestamp if record exists but data is same
+                $existingArchive->scraped_at = $scrapedAt;
+                $existingArchive->save();
+            } else {
+                // Create new record if no matching record found
+                PharmaciesArchive::create($archiveData);
+            }
+
             $this->info("Added: {$pharmacy['name']}");
         }
 

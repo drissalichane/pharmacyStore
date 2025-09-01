@@ -71,6 +71,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Admin pharmacy image upload
     Route::get('/pharmacy-image/upload', [AdminPharmacyImageController::class, 'uploadForm'])->name('pharmacy-image.upload-form');
     Route::post('/pharmacy-image/upload', [AdminPharmacyImageController::class, 'upload'])->name('pharmacy-image.upload');
+
+    // Process cropped image for OCR
+    Route::post('/process-cropped-image', [EmergencyInfoImageController::class, 'processCroppedImage'])->name('process-cropped-image');
 });
 
 require __DIR__.'/auth.php';

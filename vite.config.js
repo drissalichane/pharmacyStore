@@ -11,6 +11,6 @@ export default defineConfig({
         tailwindcss(),
     ],
     optimizeDeps: {
-        include: ['tesseract.js']
+        include: ['tesseract.js', 'cropperjs']
     }
 });

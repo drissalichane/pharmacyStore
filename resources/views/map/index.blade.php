@@ -66,9 +66,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- OpenStreetMap (Free Alternative) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Maps API -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&libraries=places"></script>
 </head>
 <body class="bg-gray-50" style="font-family: 'Ubuntu', sans-serif;">
     <!-- Navigation -->
@@ -368,7 +367,7 @@
          </div>
          @endif
 
-     <!-- OpenStreetMap Implementation -->
+     <!-- Google Maps Implementation -->
     <script>
     // Emergency region selector instant filtering
     document.addEventListener('DOMContentLoaded', function() {
@@ -384,24 +383,26 @@
             });
         });
     });
+
     let map;
     let markers = [];
+    let infoWindows = [];
 
     function initMap() {
-        // Initialize OpenStreetMap
-        map = L.map('map').setView([31.6295, -7.9811], 12); // Marrakech center
-        
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        // Initialize Google Maps
+        const marrakech = { lat: 31.6295, lng: -7.9811 };
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 12,
+            center: marrakech,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
 
         // Add our pharmacy markers
         @foreach($ourPharmacies as $pharmacy)
             addMarker(
-                {{ $pharmacy->latitude }}, 
-                {{ $pharmacy->longitude }}, 
-                '{{ $pharmacy->name }}', 
+                {{ $pharmacy->latitude }},
+                {{ $pharmacy->longitude }},
+                '{{ $pharmacy->name }}',
                 '{{ $pharmacy->address }}',
                 '{{ $pharmacy->phone }}',
                 'our'
@@ -411,9 +412,9 @@
         // Add emergency pharmacy markers
         @foreach($emergencyPharmacies as $pharmacy)
             addMarker(
-                {{ $pharmacy->latitude }}, 
-                {{ $pharmacy->longitude }}, 
-                '{{ $pharmacy->name }}', 
+                {{ $pharmacy->latitude }},
+                {{ $pharmacy->longitude }},
+                '{{ $pharmacy->name }}',
                 '{{ $pharmacy->address }}',
                 '{{ $pharmacy->phone }}',
                 'emergency'
@@ -422,103 +423,134 @@
     }
 
     function addMarker(lat, lng, name, address, phone, type) {
-        // Create custom icon
-        const icon = L.divIcon({
-            className: 'custom-marker',
-            html: `<div style="background-color: ${type === 'our' ? '#3B82F6' : '#EF4444'}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+        const position = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+        // Create marker
+        const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: name,
+            icon: {
+                url: type === 'our'
+                    ? 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="10" cy="10" r="8" fill="#3B82F6" stroke="white" stroke-width="2"/>
+                        </svg>
+                    `)
+                    : 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="10" cy="10" r="8" fill="#EF4444" stroke="white" stroke-width="2"/>
+                        </svg>
+                    `),
+                scaledSize: new google.maps.Size(20, 20),
+                anchor: new google.maps.Point(10, 10)
+            }
         });
 
-        const marker = L.marker([lat, lng], { icon: icon }).addTo(map);
-
+        // Create info window
         const content = `
-            <div class="p-4">
-                <h3 class="font-bold text-lg mb-2">${name}</h3>
-                <p class="text-gray-600 mb-2">${address}</p>
-                ${phone ? `<p class="text-gray-600"><i class="fas fa-phone mr-2"></i>${phone}</p>` : ''}
-                <div class="mt-3">
-                    <a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15" 
-                       target="_blank" class="text-blue-600 hover:text-blue-800">
+            <div style="max-width: 300px;">
+                <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">${name}</h3>
+                <p style="margin-bottom: 4px; color: #666;">${address}</p>
+                ${phone ? `<p style="margin-bottom: 8px; color: #666;"><i class="fas fa-phone" style="margin-right: 8px;"></i>${phone}</p>` : ''}
+                <div style="margin-top: 12px;">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}"
+                       target="_blank" style="color: #2563eb; text-decoration: none;">
                         Get Directions
                     </a>
                 </div>
             </div>
         `;
 
-        marker.bindPopup(content);
+        const infoWindow = new google.maps.InfoWindow({
+            content: content
+        });
+
+        // Add click listener
+        marker.addListener('click', function() {
+            // Close other info windows
+            infoWindows.forEach(iw => iw.close());
+            infoWindow.open(map, marker);
+        });
+
         markers.push(marker);
+        infoWindows.push(infoWindow);
     }
 
-         function showOnMap(lat, lng, name) {
-         map.setView([lat, lng], 15);
-         
-         // Find and open popup for this marker
-         markers.forEach(marker => {
-             if (marker.getLatLng().lat === lat && marker.getLatLng().lng === lng) {
-                 marker.openPopup();
-             }
-         });
-     }
+    function showOnMap(lat, lng, name) {
+        const position = { lat: parseFloat(lat), lng: parseFloat(lng) };
+        map.setCenter(position);
+        map.setZoom(15);
 
-     function showOnMapAndScroll(lat, lng, name) {
-         // First scroll to the map
-         scrollToMap();
-         
-         // Then show the location on map after a short delay
-         setTimeout(() => {
-             showOnMap(lat, lng, name);
-         }, 500);
-     }
+        // Find and open popup for this marker
+        markers.forEach((marker, index) => {
+            if (marker.getPosition().lat() === position.lat && marker.getPosition().lng() === position.lng) {
+                // Close other info windows
+                infoWindows.forEach(iw => iw.close());
+                infoWindows[index].open(map, marker);
+            }
+        });
+    }
 
-     function scrollToMap() {
-         const mapContainer = document.getElementById('map-container');
-         mapContainer.scrollIntoView({ 
-             behavior: 'smooth', 
-             block: 'start' 
-         });
-     }
+    function showOnMapAndScroll(lat, lng, name) {
+        // First scroll to the map
+        scrollToMap();
 
-     function scrollToSection(sectionId) {
-         const section = document.getElementById(sectionId);
-         if (section) {
-             section.scrollIntoView({ 
-                 behavior: 'smooth', 
-                 block: 'start' 
-             });
-         }
-     }
+        // Then show the location on map after a short delay
+        setTimeout(() => {
+            showOnMap(lat, lng, name);
+        }, 500);
+    }
 
-     function scrollToTop() {
-         window.scrollTo({
-             top: 0,
-             behavior: 'smooth'
-         });
-     }
+    function scrollToMap() {
+        const mapContainer = document.getElementById('map-container');
+        mapContainer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
 
-     // Show/hide back to top button based on scroll position
-     window.addEventListener('scroll', function() {
-         const backToTopButton = document.getElementById('backToTop');
-         if (window.scrollY > 300) {
-             backToTopButton.classList.remove('opacity-0', 'invisible');
-             backToTopButton.classList.add('opacity-100', 'visible');
-         } else {
-             backToTopButton.classList.add('opacity-0', 'invisible');
-             backToTopButton.classList.remove('opacity-100', 'visible');
-         }
-     });
+    function scrollToSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
+
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    // Show/hide back to top button based on scroll position
+    window.addEventListener('scroll', function() {
+        const backToTopButton = document.getElementById('backToTop');
+        if (window.scrollY > 300) {
+            backToTopButton.classList.remove('opacity-0', 'invisible');
+            backToTopButton.classList.add('opacity-100', 'visible');
+        } else {
+            backToTopButton.classList.add('opacity-0', 'invisible');
+            backToTopButton.classList.remove('opacity-100', 'visible');
+        }
+    });
 
     function searchPharmacies() {
         const query = document.getElementById('search').value;
         const filter = document.getElementById('filter').value;
-        
+
         fetch(`/map/search?query=${encodeURIComponent(query)}&type=${filter}`)
             .then(response => response.json())
             .then(data => {
                 // Clear existing markers
-                markers.forEach(marker => map.removeLayer(marker));
+                markers.forEach(marker => marker.setMap(null));
                 markers = [];
-                
+                infoWindows = [];
+
                 // Add new markers
                 data.forEach(pharmacy => {
                     addMarker(

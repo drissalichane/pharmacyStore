@@ -7,6 +7,8 @@
     <title>Admin Dashboard - Pharmacy Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="{{ asset('build/assets/ocr-ChomjTqJ.js') }}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
@@ -22,9 +24,41 @@
                         @csrf
                         <button type="submit" class="text-gray-300 hover:text-white">Logout</button>
                     </form>
+                        </div>
+                    </div>
+
+                    <!-- Modal Popup for Image Cropping -->
+                    <div id="cropModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden overflow-auto">
+                        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
+                            <button onclick="closeCropModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl z-10">&times;</button>
+        <h3 class="text-lg font-bold mb-4">Crop Image for OCR</h3>
+        <div class="mb-4">
+                    <img id="cropImage" src="" alt="Image to crop" class="max-w-full max-h-96">
+                </div>
+                <div class="flex justify-end space-x-2 mt-4">
+                    <button onclick="closeCropModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                    <button onclick="performCroppedOCR()" class="bg-blue-600 text-white px-4 py-2 rounded">Scan Cropped Area</button>
                 </div>
             </div>
         </div>
+
+        <!-- Separate Modal for OCR Image Chunks -->
+        <div id="chunksModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden overflow-auto">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-6xl relative max-h-[95vh] overflow-y-auto">
+                <button onclick="closeChunksModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl z-10">&times;</button>
+                <h3 class="text-lg font-bold mb-4">OCR Image Chunks Debug View</h3>
+                <p class="text-sm text-gray-600 mb-4">Each chunk below represents a portion of the cropped image being processed by OCR.</p>
+                <div id="chunksContainer" class="grid grid-cols-1 gap-4">
+                    <!-- Chunks will be dynamically added here -->
+                </div>
+                <div class="flex justify-end space-x-2 mt-6">
+                    <button onclick="closeChunksModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Close</button>
+                </div>
+            </div>
+        </div>
+                        </div>
+                    </div>
+            </div>
     </nav>
 
     <div class="max-w-7xl mx-auto px-4 py-8">
@@ -143,7 +177,7 @@
                     </div>
 
                     <!-- Modal Popup for Emergency Info Image Upload -->
-                    <div id="emergencyInfoImageModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto hidden">
+                    <div id="emergencyInfoImageModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-40 overflow-auto hidden">
                         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative overflow-y-auto max-h-[90vh]">
                             <button onclick="document.getElementById('emergencyInfoImageModal').classList.add('hidden')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                             <h3 class="text-lg font-bold mb-4">Upload Emergency Info Image</h3>
@@ -163,13 +197,34 @@
                                     <img src="{{ $emergencyImageUrl }}" alt="Emergency Info" class="rounded shadow w-full">
                                 </div>
                                 <div class="mt-4">
-                                    <h4 class="text-sm font-semibold mb-2">Scanned Words:</h4>
-@php
-    $emergencyImageUrl = \App\Http\Controllers\Admin\EmergencyInfoImageController::getLatestImageUrl();
-@endphp
-<button onclick="performOCR('{{ $emergencyImageUrl }}')" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">Scan</button>
-                                    <div id="scannedWords" class="bg-gray-100 rounded-lg shadow-md p-4 w-full max-w-md text-gray-700">
-                                       <!-- Scanned words will be dynamically inserted here -->
+                                    <h4 class="text-sm font-semibold mb-2">OCR Comparison:</h4>
+                                    <div class="space-y-4">
+                                        <!-- Client-Side OCR -->
+                                        <div class="bg-blue-50 rounded-lg p-4">
+                                            <h5 class="font-semibold text-blue-800 mb-2">Client-Side OCR (Tesseract.js)</h5>
+                                            <button onclick="openCropModalForClient('{{ $emergencyImageUrl }}')" class="bg-blue-600 text-white px-3 py-2 rounded text-sm mb-2">Scan Cropped Area (Client)</button>
+                                            <div id="clientScannedWords" class="bg-white rounded p-3 text-gray-700 text-sm min-h-[60px]">
+                                               Client-side results will appear here...
+                                            </div>
+                                        </div>
+
+                                        <!-- Server-Side OCR -->
+                                        <div class="bg-green-50 rounded-lg p-4">
+                                            <h5 class="font-semibold text-green-800 mb-2">Server-Side OCR (Tesseract CLI)</h5>
+                                            <div class="flex gap-2 mb-2">
+                                                <button onclick="openCropModalForServer('{{ $emergencyImageUrl }}')" class="bg-green-600 text-white px-3 py-2 rounded text-sm">Scan Cropped Area (Server)</button>
+                                                <button onclick="showChunksModal('{{ $emergencyImageUrl }}')" class="bg-purple-600 text-white px-3 py-2 rounded text-sm">Show Chunks</button>
+                                            </div>
+                                            <div id="serverScannedWords" class="bg-white rounded p-3 text-gray-700 text-sm min-h-[60px]">
+                                               Server-side results will appear here...
+                                            </div>
+                                        </div>
+
+                                        <!-- OCR Image Chunks Debug View -->
+                                        <div id="chunkDebugContainer" style="padding: 10px; border: 1px solid #ddd; max-width: 100%; overflow-x: auto; white-space: nowrap; margin-top: 10px;">
+                                            <h4 class="font-semibold mb-2">OCR Image Chunks Debug View</h4>
+                                            <p style="font-size: 0.875rem; color: #555;">Each chunk below represents a portion of the cropped image being processed by OCR.</p>
+                                        </div>
                                     </div>
                                 </div>
                             @endif
@@ -247,6 +302,9 @@
     </footer>
 
     <script>
+    let cropper = null;
+    let lastProcessedChunks = null; // Store chunks from the last OCR operation
+
     function runScraping() {
         if (confirm('This will update emergency pharmacies from the syndicat website. This may take a few minutes. Continue?')) {
             // Show loading state
@@ -254,17 +312,17 @@
             const originalText = button.textContent;
             button.textContent = 'Updating...';
             button.disabled = true;
-            
+
             // Add loading spinner
             const spinner = document.createElement('span');
             spinner.className = 'ml-2 animate-spin';
             spinner.innerHTML = '⏳';
             button.appendChild(spinner);
-            
+
             // Make AJAX call to run the scraping command with longer timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
-            
+
             fetch('/admin/scrape-pharmacie-de-garde', {
                 method: 'POST',
                 headers: {
@@ -302,6 +360,467 @@
                 button.removeChild(spinner);
             });
         }
+    }
+
+    function openCropModal(imageUrl) {
+        const cropModal = document.getElementById('cropModal');
+        const cropImage = document.getElementById('cropImage');
+
+        cropImage.src = imageUrl;
+        cropModal.classList.remove('hidden');
+
+        // Initialize Cropper.js
+        cropImage.onload = function() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(cropImage, {
+                aspectRatio: NaN, // Allow free cropping
+                viewMode: 1,
+                responsive: true,
+                restore: false,
+                checkCrossOrigin: false,
+                checkOrientation: false,
+                modal: true,
+                guides: true,
+                center: true,
+                highlight: true,
+                background: false,
+                autoCrop: true,
+                autoCropArea: 0.8,
+                movable: true,
+                rotatable: false,
+                scalable: true,
+                zoomable: true,
+                zoomOnTouch: true,
+                zoomOnWheel: true,
+                wheelZoomRatio: 0.1,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: true,
+            });
+        };
+    }
+
+    // Image chunking function for better OCR accuracy
+    async function processImageChunks(canvas, chunkSize = 300) {
+        const chunks = [];
+        const results = [];
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Calculate number of chunks needed
+        const cols = Math.ceil(width / chunkSize);
+        const rows = Math.ceil(height / chunkSize);
+
+        // Create chunks
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const chunkCanvas = document.createElement('canvas');
+                const chunkCtx = chunkCanvas.getContext('2d');
+
+                const chunkWidth = Math.min(chunkSize, width - col * chunkSize);
+                const chunkHeight = Math.min(chunkSize, height - row * chunkSize);
+
+                chunkCanvas.width = chunkWidth;
+                chunkCanvas.height = chunkHeight;
+
+                // Enable high-quality rendering for better OCR accuracy
+                chunkCtx.imageSmoothingEnabled = true;
+                chunkCtx.imageSmoothingQuality = 'high';
+
+                // Copy chunk from original canvas
+                chunkCtx.drawImage(
+                    canvas,
+                    col * chunkSize, row * chunkSize, chunkWidth, chunkHeight,
+                    0, 0, chunkWidth, chunkHeight
+                );
+
+                // For debugging: append chunk canvas to a container to visualize chunks
+                const debugContainer = document.getElementById('chunkDebugContainer');
+                if (debugContainer) {
+                    const chunkWrapper = document.createElement('div');
+                    chunkWrapper.style.border = '1px solid #ccc';
+                    chunkWrapper.style.margin = '2px';
+                    chunkWrapper.style.display = 'inline-block';
+                    chunkWrapper.style.width = chunkWidth + 'px';
+                    chunkWrapper.style.height = chunkHeight + 'px';
+                    chunkWrapper.title = `Chunk (${col}, ${row}) - ${chunkWidth}x${chunkHeight}`;
+                    chunkWrapper.appendChild(chunkCanvas);
+                    debugContainer.appendChild(chunkWrapper);
+                }
+
+                chunks.push({
+                    canvas: chunkCanvas,
+                    x: col * chunkSize,
+                    y: row * chunkSize,
+                    width: chunkWidth,
+                    height: chunkHeight
+                });
+            }
+        }
+
+        // Process each chunk with OCR
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            const dataUrl = chunk.canvas.toDataURL('image/png');
+
+            try {
+                const result = await Tesseract.recognize(dataUrl, 'fra', {
+                    logger: info => console.log(`Chunk ${i + 1}/${chunks.length}:`, info.progress)
+                });
+
+                if (result.data.text && result.data.text.trim()) {
+                    results.push({
+                        text: result.data.text.trim(),
+                        position: { x: chunk.x, y: chunk.y }
+                    });
+                }
+            } catch (error) {
+                console.error(`Error processing chunk ${i + 1}:`, error);
+            }
+        }
+
+        // Sort results by position (top to bottom, left to right)
+        results.sort((a, b) => {
+            if (Math.abs(a.position.y - b.position.y) < 50) {
+                return a.position.x - b.position.x;
+            }
+            return a.position.y - b.position.y;
+        });
+
+        // Combine all text results
+        return results.map(r => r.text).join('\n');
+    }
+
+    // New function to open crop modal for client-side OCR
+    function openCropModalForClient(imageUrl) {
+        openCropModal(imageUrl);
+        // Override performCroppedOCR to use client-side OCR
+        window.performCroppedOCR = function() {
+            if (!cropper) {
+                alert('Please select an area to crop first.');
+                return;
+            }
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 1200,
+                height: 900,
+                minWidth: 256,
+                minHeight: 256,
+                maxWidth: 4096,
+                maxHeight: 4096,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                alert('Failed to crop image. Please try again.');
+                return;
+            }
+
+            // Use image chunking for better OCR accuracy
+            const clientScannedWords = document.getElementById('clientScannedWords');
+            clientScannedWords.innerHTML = '<p>Scanning cropped area...</p>';
+
+            // Clear chunk debug container before new chunks
+            const debugContainer = document.getElementById('chunkDebugContainer');
+            if (debugContainer) {
+                debugContainer.innerHTML = '<h4 class="font-semibold mb-2">OCR Image Chunks Debug View</h4><p style="font-size: 0.875rem; color: #555;">Each chunk below represents a portion of the cropped image being processed by OCR.</p>';
+            }
+
+            processImageChunks(canvas).then(combinedText => {
+                clientScannedWords.innerHTML = `<p>${combinedText || 'No text detected'}</p>`;
+                // Close crop modal after processing completes
+                closeCropModal();
+            }).catch(error => {
+                console.error('OCR Error:', error);
+                clientScannedWords.innerHTML = '<p>Error during image scanning.</p>';
+                // Close crop modal even on error
+                closeCropModal();
+            });
+
+            // Do NOT closeCropModal() here immediately
+        };
+    }
+
+    // New function to open crop modal for server-side OCR
+    function openCropModalForServer(imageUrl) {
+        openCropModal(imageUrl);
+        // Override performCroppedOCR to use server-side OCR
+        window.performCroppedOCR = function() {
+            if (!cropper) {
+                alert('Please select an area to crop first.');
+                return;
+            }
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 1200,
+                height: 900,
+                minWidth: 256,
+                minHeight: 256,
+                maxWidth: 4096,
+                maxHeight: 4096,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                alert('Failed to crop image. Please try again.');
+                return;
+            }
+
+            // Store chunks for later display
+            lastProcessedChunks = generateChunks(canvas);
+
+            canvas.toBlob(function(blob) {
+                const formData = new FormData();
+                formData.append('image', blob, 'cropped-image.png');
+
+                const serverScannedWords = document.getElementById('serverScannedWords');
+                serverScannedWords.innerHTML = '<p>Processing cropped image...</p>';
+
+                closeCropModal();
+
+                fetch('/admin/process-cropped-image', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        serverScannedWords.innerHTML = `<p>${data.text}</p>`;
+                    } else {
+                        serverScannedWords.innerHTML = '<p>Error processing image.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    serverScannedWords.innerHTML = '<p>Error processing image.</p>';
+                });
+            }, 'image/png');
+        };
+    }
+
+    function closeCropModal() {
+        const cropModal = document.getElementById('cropModal');
+        cropModal.classList.add('hidden');
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    }
+
+    function performCroppedOCR() {
+        if (!cropper) {
+            alert('Please select an area to crop first.');
+            return;
+        }
+
+        // Get cropped canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 1200,
+                height: 900,
+                minWidth: 256,
+                minHeight: 256,
+                maxWidth: 4096,
+                maxHeight: 4096,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+        if (!canvas) {
+            alert('Failed to crop image. Please try again.');
+            return;
+        }
+
+        // Convert canvas to blob
+        canvas.toBlob(function(blob) {
+            const formData = new FormData();
+            formData.append('image', blob, 'cropped-image.png');
+
+            // Show loading state
+            const serverScannedWords = document.getElementById('serverScannedWords');
+            serverScannedWords.innerHTML = '<p>Processing cropped image...</p>';
+
+            // Close crop modal
+            closeCropModal();
+
+            // Send cropped image to OCR processing
+            fetch('/admin/process-cropped-image', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    serverScannedWords.innerHTML = `<p>${data.text}</p>`;
+                } else {
+                    serverScannedWords.innerHTML = '<p>Error processing image.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                serverScannedWords.innerHTML = '<p>Error processing image.</p>';
+            });
+        }, 'image/png');
+    }
+
+    // Override the performOCR function to use the client container
+    window.performOCR = async function performOCR(imageUrl) {
+        console.log('performOCR function triggered with imageUrl:', imageUrl);
+        const clientScannedWords = document.getElementById('clientScannedWords');
+        if (!clientScannedWords) {
+            console.error('Client scanned words container not found');
+            return;
+        }
+
+        clientScannedWords.innerHTML = '<p>Scanning...</p>';
+
+        try {
+            const result = await Tesseract.recognize(
+                imageUrl,
+                'fra',
+                {
+                    logger: info => console.log('Tesseract progress:', info)
+                }
+            );
+
+            console.log('OCR Result:', result.data.text);
+            clientScannedWords.innerHTML = `<p>${result.data.text || 'No text detected'}</p>`;
+        } catch (error) {
+            console.error('OCR Error:', error);
+            clientScannedWords.innerHTML = '<p>Error during image scanning.</p>';
+        }
+    }
+
+    // Function to show chunks modal
+    function showChunksModal(imageUrl) {
+        const chunksModal = document.getElementById('chunksModal');
+        const chunksContainer = document.getElementById('chunksContainer');
+
+        // Clear previous chunks
+        chunksContainer.innerHTML = '<p class="text-center text-gray-500">Loading chunks...</p>';
+
+        // If we have stored chunks from a previous scan, use them directly
+        if (lastProcessedChunks) {
+            displayChunks(lastProcessedChunks, chunksContainer);
+            chunksModal.classList.remove('hidden');
+            chunksContainer.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
+        // If no stored chunks, open crop modal to generate new ones
+        openCropModal(imageUrl);
+
+        // Override performCroppedOCR to show chunks instead of processing OCR
+        window.performCroppedOCR = function() {
+            if (!cropper) {
+                alert('Please select an area to crop first.');
+                return;
+            }
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 1200,  // Higher resolution for better quality
+                height: 900,
+                minWidth: 256,
+                minHeight: 256,
+                maxWidth: 4096,
+                maxHeight: 4096,
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,  // Enable smoothing for better quality
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                alert('Failed to crop image. Please try again.');
+                return;
+            }
+
+            // Generate new chunks and display them
+            const chunks = generateChunks(canvas);
+            displayChunks(chunks, chunksContainer);
+
+            // Close crop modal and show chunks modal
+            closeCropModal();
+            chunksModal.classList.remove('hidden');
+
+            // Automatically scroll chunks container to show chunks immediately
+            chunksContainer.scrollIntoView({ behavior: 'smooth' });
+        };
+    }
+
+
+
+    // Generate chunks and return array of chunk canvases and metadata
+    function generateChunks(canvas, chunkSize = 300) {
+        const chunks = [];
+        const width = canvas.width;
+        const height = canvas.height;
+
+        const cols = Math.ceil(width / chunkSize);
+        const rows = Math.ceil(height / chunkSize);
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const chunkCanvas = document.createElement('canvas');
+                const chunkCtx = chunkCanvas.getContext('2d');
+
+                const chunkWidth = Math.min(chunkSize, width - col * chunkSize);
+                const chunkHeight = Math.min(chunkSize, height - row * chunkSize);
+
+                chunkCanvas.width = chunkWidth;
+                chunkCanvas.height = chunkHeight;
+
+                chunkCtx.imageSmoothingEnabled = true;
+                chunkCtx.imageSmoothingQuality = 'high';
+                chunkCtx.drawImage(
+                    canvas,
+                    col * chunkSize, row * chunkSize, chunkWidth, chunkHeight,
+                    0, 0, chunkWidth, chunkHeight
+                );
+
+                chunks.push({
+                    canvas: chunkCanvas,
+                    x: col * chunkSize,
+                    y: row * chunkSize,
+                    width: chunkWidth,
+                    height: chunkHeight
+                });
+            }
+        }
+        return chunks;
+    }
+
+    // Display chunks in container
+    function displayChunks(chunks, container) {
+        container.innerHTML = ''; // Clear container
+        chunks.forEach((chunk, index) => {
+            const chunkWrapper = document.createElement('div');
+            chunkWrapper.className = 'bg-white border border-gray-300 rounded-lg p-3 shadow-sm';
+            chunkWrapper.innerHTML = `
+                <div class="text-xs text-gray-600 mb-2">Chunk ${index + 1} - ${chunk.width}x${chunk.height}</div>
+                <div class="flex justify-center">
+                    <img src="${chunk.canvas.toDataURL('image/png')}" alt="Chunk ${index + 1}" class="max-w-full max-h-48 border border-gray-200 rounded">
+                </div>
+            `;
+            container.appendChild(chunkWrapper);
+        });
+    }
+
+    // Function to close chunks modal
+    function closeChunksModal() {
+        const chunksModal = document.getElementById('chunksModal');
+        chunksModal.classList.add('hidden');
     }
 
     </script>

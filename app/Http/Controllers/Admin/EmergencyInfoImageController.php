@@ -40,4 +40,52 @@ class EmergencyInfoImageController extends Controller
         }
         return null;
     }
+
+    public function processCroppedImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:4096',
+        ]);
+
+        try {
+            // Store the cropped image temporarily
+            $path = $request->file('image')->store('temp', 'public');
+            $fullPath = storage_path('app/public/' . $path);
+
+            // Process OCR using Tesseract
+            $tesseractPath = '"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"';
+            $command = "$tesseractPath \"$fullPath\" stdout -l fra 2>&1";
+            $output = shell_exec($command);
+
+            // Log the command and output for debugging
+            \Log::info("Tesseract command: $command");
+            \Log::info("Tesseract output: $output");
+
+            // Clean up temporary file
+            Storage::disk('public')->delete($path);
+
+            if ($output === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OCR processing failed'
+                ]);
+            }
+
+            // Clean up the extracted text
+            $cleanedText = trim($output);
+            $cleanedText = preg_replace('/\s+/', ' ', $cleanedText);
+
+            return response()->json([
+                'success' => true,
+                'text' => $cleanedText ?: 'No text detected in the cropped area.'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error processing cropped image OCR: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error processing image: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
