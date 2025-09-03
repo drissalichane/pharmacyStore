@@ -135,6 +135,19 @@
                 </div>
             </div>
 
+            <!-- Brands Management -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Brands Management</h2>
+                <div class="space-y-3">
+                    <a href="{{ route('admin.brands.index') }}" class="block w-full bg-blue-600 text-white py-2 px-4 rounded-md text-center hover:bg-blue-700 transition-colors">
+                        View All Brands
+                    </a>
+                    <a href="{{ route('admin.brands.create') }}" class="block w-full bg-green-600 text-white py-2 px-4 rounded-md text-center hover:bg-green-700 transition-colors">
+                        Add New Brand
+                    </a>
+                </div>
+            </div>
+
             <!-- Locations Management -->
             <div class="bg-white rounded-lg shadow-md p-6 relative">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">Locations Management</h2>

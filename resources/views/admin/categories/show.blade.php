@@ -67,9 +67,14 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Products Count</label>
-                            <p class="text-sm text-gray-900">{{ $category->products->count() }} products</p>
+                            <p class="text-sm text-gray-900">{{ $products->total() }} products</p>
                         </div>
-                        
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Path</label>
+                            <input type="text" value="{{ $category->breadcrumb }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-sm text-gray-900" readonly>
+                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Created</label>
                             <p class="text-sm text-gray-900">{{ $category->created_at->format('M d, Y H:i') }}</p>
@@ -88,7 +93,7 @@
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Products in this Category</h2>
                     
-                    @if($category->products->count() > 0)
+                    @if($products->count() > 0)
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -101,7 +106,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($category->products as $product)
+                                    @foreach($products as $product)
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
@@ -148,6 +153,13 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination -->
+                        @if($products->hasPages())
+                            <div class="mt-6">
+                                {{ $products->links() }}
+                            </div>
+                        @endif
                     @else
                         <div class="text-center py-8">
                             <div class="text-4xl mb-4">📦</div>

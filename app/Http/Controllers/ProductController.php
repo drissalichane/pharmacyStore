@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -27,9 +28,18 @@ class ProductController extends Controller
             });
         }
 
-        // Category filter
+        // Category filter (now includes subcategories)
         if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
+            $category = Category::find($request->category);
+            if ($category) {
+                $subcategoryIds = $category->getAllSubcategoryIds();
+                $query->whereIn('category_id', $subcategoryIds);
+            }
+        }
+
+        // Brand filter
+        if ($request->filled('brand')) {
+            $query->where('brand_id', $request->brand);
         }
 
         // Sort functionality
@@ -50,8 +60,9 @@ class ProductController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
         $categories = Category::where('is_active', true)->get();
+        $brands = Brand::where('is_active', true)->get();
 
-        return view('products.index', compact('products', 'categories'));
+        return view('products.index', compact('products', 'categories', 'brands'));
     }
 
     public function show(Product $product)
@@ -62,12 +73,16 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
-        return view('products.show', compact('product', 'relatedProducts'));
+        $breadcrumb = $product->breadcrumb;
+
+        return view('products.show', compact('product', 'relatedProducts', 'breadcrumb'));
     }
 
     public function category(Category $category)
     {
-        $products = Product::where('category_id', $category->id)
+        $subcategoryIds = $category->getAllSubcategoryIds();
+
+        $products = Product::whereIn('category_id', $subcategoryIds)
             ->where('is_active', true)
             ->where('stock_quantity', '>', 0)
             ->orderBy('created_at', 'desc')
@@ -75,6 +90,25 @@ class ProductController extends Controller
 
         $categories = Category::where('is_active', true)->get();
 
-        return view('products.category', compact('products', 'categories', 'category'));
+        // Get brands for this category tree
+        $brands = $category->brandsInTree()->get();
+
+        return view('products.category', compact('products', 'categories', 'category', 'brands'));
+    }
+
+    public function getBrandsForCategory(Category $category)
+    {
+        $brands = $category->brandsInTree()
+            ->withCount(['products' => function ($query) use ($category) {
+                $subcategoryIds = $category->getAllSubcategoryIds();
+                $query->whereIn('category_id', $subcategoryIds)
+                      ->where('is_active', true)
+                      ->where('stock_quantity', '>', 0);
+            }])
+            ->having('products_count', '>', 0)
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($brands);
     }
 }

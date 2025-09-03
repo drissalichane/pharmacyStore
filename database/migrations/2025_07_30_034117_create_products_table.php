@@ -18,13 +18,16 @@ return new class extends Migration
             $table->integer('stock_quantity')->default(0);
             $table->string('sku')->unique();
             $table->string('image')->nullable();
+            $table->json('images')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('requires_prescription')->default(false);
             $table->string('manufacturer')->nullable();
             $table->string('dosage_form')->nullable();
             $table->string('strength')->nullable();
+            $table->json('attributes')->nullable();
             $table->integer('sort_order')->default(0);
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->foreignId('brand_id')->nullable()->constrained('brands')->onDelete('set null');
             $table->timestamps();
         });
     }

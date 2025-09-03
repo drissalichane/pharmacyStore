@@ -34,7 +34,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Basic Information -->
                     <div class="space-y-6">
@@ -48,18 +48,71 @@
                             @enderror
                         </div>
 
+                        <!-- Cascading Category Selection -->
+                        <div id="category-section">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+
+                            <!-- Root Category -->
+                            <div class="mb-3">
+                                <label for="root_category" class="block text-xs font-medium text-gray-600 mb-1">Root Category</label>
+                                <select id="root_category" name="root_category"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('category_id') border-red-500 @enderror">
+                                    <option value="">Select Root Category</option>
+                                    @foreach($rootCategories as $category)
+                                <option value="{{ $category->id }}" data-root-type="{{ $category->root_type }}" {{ old('root_category') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                            </div>
+
+                            <!-- Level 1 Category -->
+                            <div id="level1-container" class="mb-3 hidden">
+                                <label for="level1_category" class="block text-xs font-medium text-gray-600 mb-1">Subcategory Level 1</label>
+                                <select id="level1_category" name="level1_category"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Select Subcategory</option>
+                                </select>
+                            </div>
+
+                            <!-- Level 2 Category -->
+                            <div id="level2-container" class="mb-3 hidden">
+                                <label for="level2_category" class="block text-xs font-medium text-gray-600 mb-1">Subcategory Level 2</label>
+                                <select id="level2_category" name="level2_category"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Select Subcategory</option>
+                                </select>
+                            </div>
+
+                            <!-- Level 3 Category -->
+                            <div id="level3-container" class="mb-3 hidden">
+                                <label for="level3_category" class="block text-xs font-medium text-gray-600 mb-1">Subcategory Level 3</label>
+                                <select id="level3_category" name="level3_category"
+                                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Select Subcategory (Optional)</option>
+                                </select>
+                            </div>
+
+                            <!-- Hidden field for final category selection -->
+                            <input type="hidden" id="category_id" name="category_id" value="{{ old('category_id') }}">
+                            @error('category_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div>
-                            <label for="category_id" class="block text-sm font-medium text-gray-700">Category</label>
-                            <select id="category_id" name="category_id" required
-                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('category_id') border-red-500 @enderror">
-                                <option value="">Select Category</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
+                            <label for="brand_id" class="block text-sm font-medium text-gray-700">Brand</label>
+                            <select id="brand_id" name="brand_id"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('brand_id') border-red-500 @enderror">
+                                <option value="">Select Brand (Optional)</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->id }}" {{ old('brand_id') == $brand->id ? 'selected' : '' }}>
+                                        {{ $brand->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('category_id')
+                            <p class="mt-1 text-sm text-gray-500">Choose an existing brand or leave empty to create a new one later</p>
+                            @error('brand_id')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -127,21 +180,14 @@
                             @enderror
                         </div>
 
-                        <div class="flex items-center">
-                            <input type="checkbox" id="requires_prescription" name="requires_prescription" value="1"
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                   {{ old('requires_prescription') ? 'checked' : '' }}>
-                            <label for="requires_prescription" class="ml-2 block text-sm text-gray-900">
-                                Requires Prescription
-                            </label>
-                        </div>
+
                     </div>
                 </div>
 
                 <!-- Additional Information -->
                 <div class="mt-8 space-y-6">
                     <h3 class="text-lg font-medium text-gray-900">Additional Information</h3>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="dosage_form" class="block text-sm font-medium text-gray-700">Dosage Form</label>
@@ -198,5 +244,188 @@
             <p>&copy; 2024 Pharmacy Store Admin. All rights reserved.</p>
         </div>
     </footer>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const rootCategory = document.getElementById('root_category');
+                    const level1Category = document.getElementById('level1_category');
+                    const level2Category = document.getElementById('level2_category');
+                    const level3Category = document.getElementById('level3_category');
+                    const categoryId = document.getElementById('category_id');
+
+                    const level1Container = document.getElementById('level1-container');
+                    const level2Container = document.getElementById('level2-container');
+                    const level3Container = document.getElementById('level3-container');
+
+                    // Function to reset dropdowns
+                    function resetDropdowns(fromLevel = 1) {
+                        if (fromLevel <= 1) {
+                            level1Category.innerHTML = '<option value="">Select Subcategory</option>';
+                            level1Container.classList.add('hidden');
+                        }
+                        if (fromLevel <= 2) {
+                            level2Category.innerHTML = '<option value="">Select Subcategory</option>';
+                            level2Container.classList.add('hidden');
+                        }
+                        if (fromLevel <= 3) {
+                            level3Category.innerHTML = '<option value="">Select Subcategory (Optional)</option>';
+                            level3Container.classList.add('hidden');
+                        }
+                        categoryId.value = '';
+                    }
+
+                    // Function to load subcategories
+                    async function loadSubcategories(parentId, targetSelect, level) {
+                        try {
+                            const response = await fetch(`/admin/api/categories/subcategories/${parentId}`);
+                            const data = await response.json();
+
+                            targetSelect.innerHTML = level === 3
+                                ? '<option value="">Select Subcategory (Optional)</option>'
+                                : '<option value="">Select Subcategory</option>';
+
+                            data.forEach(category => {
+                                const option = document.createElement('option');
+                                option.value = category.id;
+                                option.textContent = category.name;
+                                targetSelect.appendChild(option);
+                            });
+
+                            return data.length > 0;
+                        } catch (error) {
+                            console.error('Error loading subcategories:', error);
+                            return false;
+                        }
+                    }
+
+                    // Initialize dropdowns on page load if old category_id exists
+                    async function initializeDropdowns() {
+                        const oldCategoryId = "{{ old('category_id') }}";
+                        if (!oldCategoryId) {
+                            return;
+                        }
+
+                        // Fetch category hierarchy for oldCategoryId
+                        try {
+                            const response = await fetch(`/admin/api/categories/hierarchy/${oldCategoryId}`);
+                            const hierarchy = await response.json();
+
+                            if (hierarchy.length > 0) {
+                                rootCategory.value = hierarchy[0].id;
+                                const hasLevel1 = await loadSubcategories(hierarchy[0].id, level1Category, 1);
+                                if (hasLevel1) {
+                                    level1Container.classList.remove('hidden');
+                                }
+
+                                if (hierarchy.length > 1) {
+                                    level1Category.value = hierarchy[1].id;
+                                    const hasLevel2 = await loadSubcategories(hierarchy[1].id, level2Category, 2);
+                                    if (hasLevel2) {
+                                        level2Container.classList.remove('hidden');
+                                    }
+                                }
+
+                                if (hierarchy.length > 2) {
+                                    level2Category.value = hierarchy[2].id;
+                                    const hasLevel3 = await loadSubcategories(hierarchy[2].id, level3Category, 3);
+                                    if (hasLevel3) {
+                                        level3Container.classList.remove('hidden');
+                                    }
+                                }
+
+                                if (hierarchy.length > 3) {
+                                    level3Category.value = hierarchy[3].id;
+                                    categoryId.value = hierarchy[3].id;
+                                } else if (hierarchy.length > 2) {
+                                    categoryId.value = hierarchy[2].id;
+                                } else if (hierarchy.length > 1) {
+                                    categoryId.value = hierarchy[1].id;
+                                } else {
+                                    categoryId.value = hierarchy[0].id;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error fetching category hierarchy:', error);
+                        }
+                    }
+
+                    // Root category change handler
+                    rootCategory.addEventListener('change', async function() {
+                        const selectedValue = this.value;
+
+                        if (!selectedValue) {
+                            resetDropdowns();
+                            categoryId.value = '';
+                            return;
+                        }
+
+                        resetDropdowns();
+
+                        // Set category_id to root category initially
+                        categoryId.value = selectedValue;
+
+                        // Load level 1 categories
+                        const hasLevel1 = await loadSubcategories(selectedValue, level1Category, 1);
+                        if (hasLevel1) {
+                            level1Container.classList.remove('hidden');
+                        }
+                    });
+
+                    // Level 1 category change handler
+                    level1Category.addEventListener('change', async function() {
+                        const selectedValue = this.value;
+
+                        if (!selectedValue) {
+                            resetDropdowns(2);
+                            categoryId.value = rootCategory.value;
+                            return;
+                        }
+
+                        resetDropdowns(2);
+
+                        // Always set category_id to the selected level 1 category
+                        categoryId.value = selectedValue;
+
+                        // Load level 2 categories (optional)
+                        const hasLevel2 = await loadSubcategories(selectedValue, level2Category, 2);
+                        if (hasLevel2) {
+                            level2Container.classList.remove('hidden');
+                        } else {
+                            // No level 2 categories, keep category_id as level 1
+                            level2Container.classList.add('hidden');
+                        }
+                    });
+
+                    // Level 2 category change handler
+                    level2Category.addEventListener('change', async function() {
+                        const selectedValue = this.value;
+
+                        if (!selectedValue) {
+                            resetDropdowns(3);
+                            categoryId.value = level1Category.value;
+                            return;
+                        }
+
+                        resetDropdowns(3);
+
+                        // Load level 3 categories
+                        const hasLevel3 = await loadSubcategories(selectedValue, level3Category, 3);
+                        if (hasLevel3) {
+                            level3Container.classList.remove('hidden');
+                        } else {
+                            categoryId.value = selectedValue;
+                        }
+                    });
+
+                    // Level 3 category change handler
+                    level3Category.addEventListener('change', function() {
+                        const selectedValue = this.value;
+                        categoryId.value = selectedValue || level2Category.value;
+                    });
+
+                    // Initialize dropdowns on page load
+                    initializeDropdowns();
+                });
+            </script>
 </body>
-</html> 
+</html>

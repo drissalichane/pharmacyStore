@@ -35,7 +35,7 @@
             <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Basic Information -->
                     <div class="space-y-6">
@@ -49,18 +49,46 @@
                             @enderror
                         </div>
 
+                        <!-- Dynamic Cascading Category Selection -->
+                        <div id="category-section">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <div id="category-dropdowns">
+                                <!-- Root Category -->
+                                <div class="mb-3 category-level" data-level="0">
+                                    <label for="category_0" class="block text-xs font-medium text-gray-600 mb-1">Root Category</label>
+                                    <select id="category_0" name="category_0"
+                                            class="category-select block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('category_id') border-red-500 @enderror">
+                                        <option value="">Select Root Category</option>
+                                        @foreach($rootCategories as $category)
+                                            <option value="{{ $category->id }}" data-root-type="{{ $category->root_type }}"
+                                                    {{ old('category_0', (isset($categoryHierarchy[0]) ? $categoryHierarchy[0]->id : '')) == $category->id ? 'selected' : '' }}>
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Hidden field for final category selection -->
+                            <input type="hidden" id="category_id" name="category_id" value="{{ old('category_id', $product->category_id) }}">
+                            @error('category_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div>
-                            <label for="category_id" class="block text-sm font-medium text-gray-700">Category</label>
-                            <select id="category_id" name="category_id" required
-                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('category_id') border-red-500 @enderror">
-                                <option value="">Select Category</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
+                            <label for="brand_id" class="block text-sm font-medium text-gray-700">Brand</label>
+                            <select id="brand_id" name="brand_id"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('brand_id') border-red-500 @enderror">
+                                <option value="">Select Brand (Optional)</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->id }}" {{ old('brand_id', $product->brand_id) == $brand->id ? 'selected' : '' }}>
+                                        {{ $brand->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('category_id')
+                            <p class="mt-1 text-sm text-gray-500">Choose an existing brand or leave empty to create a new one later</p>
+                            @error('brand_id')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -134,21 +162,14 @@
                             @enderror
                         </div>
 
-                        <div class="flex items-center">
-                            <input type="checkbox" id="requires_prescription" name="requires_prescription" value="1"
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                   {{ old('requires_prescription', $product->requires_prescription) ? 'checked' : '' }}>
-                            <label for="requires_prescription" class="ml-2 block text-sm text-gray-900">
-                                Requires Prescription
-                            </label>
-                        </div>
+
                     </div>
                 </div>
 
                 <!-- Additional Information -->
                 <div class="mt-8 space-y-6">
                     <h3 class="text-lg font-medium text-gray-900">Additional Information</h3>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="dosage_form" class="block text-sm font-medium text-gray-700">Dosage Form</label>
@@ -205,5 +226,169 @@
             <p>&copy; 2024 Pharmacy Store Admin. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryDropdowns = document.getElementById('category-dropdowns');
+            const categoryId = document.getElementById('category_id');
+
+            // Store original hierarchy for restoration
+            const originalHierarchy = @json($categoryHierarchy ?? []);
+
+            // Function to create a category dropdown
+            function createCategoryDropdown(level, labelText, selectedValue = '') {
+                const container = document.createElement('div');
+                container.className = 'mb-3 category-level';
+                container.setAttribute('data-level', level);
+
+                const label = document.createElement('label');
+                label.setAttribute('for', `category_${level}`);
+                label.className = 'block text-xs font-medium text-gray-600 mb-1';
+                label.textContent = labelText;
+
+                const select = document.createElement('select');
+                select.id = `category_${level}`;
+                select.name = `category_${level}`;
+                select.className = 'category-select block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm';
+
+                if (selectedValue) {
+                    select.value = selectedValue;
+                }
+
+                container.appendChild(label);
+                container.appendChild(select);
+
+                return container;
+            }
+
+            // Function to remove dropdowns after a certain level
+            function removeDropdownsAfter(level) {
+                const allLevels = categoryDropdowns.querySelectorAll('.category-level');
+                allLevels.forEach(container => {
+                    const containerLevel = parseInt(container.getAttribute('data-level'));
+                    if (containerLevel > level) {
+                        container.remove();
+                    }
+                });
+            }
+
+            // Function to load subcategories
+            async function loadSubcategories(parentId, level) {
+                try {
+                    const response = await fetch(`/admin/api/categories/subcategories/${parentId}`);
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error loading subcategories:', error);
+                    return [];
+                }
+            }
+
+            // Function to populate dropdown options
+            function populateDropdown(select, categories, selectedValue = '') {
+                select.innerHTML = '<option value="">Select Subcategory</option>';
+
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    if (selectedValue && selectedValue == category.id) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+
+                return categories.length > 0;
+            }
+
+            // Function to handle category selection change
+            async function handleCategoryChange(level, selectedValue) {
+                // Remove all dropdowns after current level
+                removeDropdownsAfter(level);
+
+                if (!selectedValue) {
+                    // If no selection, set category_id to the previous level's selection
+                    const prevLevel = level - 1;
+                    const prevSelect = document.getElementById(`category_${prevLevel}`);
+                    categoryId.value = prevSelect ? prevSelect.value : '';
+                    return;
+                }
+
+                // Set category_id to current selection
+                categoryId.value = selectedValue;
+
+                // Load subcategories for next level
+                const subcategories = await loadSubcategories(selectedValue, level + 1);
+
+                if (subcategories.length > 0) {
+                    // Create next level dropdown
+                    const nextLevel = level + 1;
+                    const labelText = nextLevel === 1 ? 'Subcategory Level 1' :
+                                    nextLevel === 2 ? 'Subcategory Level 2' :
+                                    nextLevel === 3 ? 'Subcategory Level 3' :
+                                    `Subcategory Level ${nextLevel}`;
+
+                    const nextDropdown = createCategoryDropdown(nextLevel, labelText);
+                    categoryDropdowns.appendChild(nextDropdown);
+
+                    const nextSelect = document.getElementById(`category_${nextLevel}`);
+                    populateDropdown(nextSelect, subcategories);
+
+                    // Add change event listener to new dropdown
+                    nextSelect.addEventListener('change', function() {
+                        handleCategoryChange(nextLevel, this.value);
+                    });
+                }
+            }
+
+            // Function to restore original selections
+            async function restoreOriginalSelections() {
+                if (originalHierarchy.length === 0) return;
+
+                // Set root category
+                const rootSelect = document.getElementById('category_0');
+                rootSelect.value = originalHierarchy[0].id;
+
+                // Load and set each level of the hierarchy
+                for (let i = 0; i < originalHierarchy.length - 1; i++) {
+                    const currentCategory = originalHierarchy[i];
+                    const nextLevel = i + 1;
+                    const nextCategory = originalHierarchy[nextLevel];
+
+                    const subcategories = await loadSubcategories(currentCategory.id, nextLevel);
+
+                    if (subcategories.length > 0) {
+                        const labelText = nextLevel === 1 ? 'Subcategory Level 1' :
+                                        nextLevel === 2 ? 'Subcategory Level 2' :
+                                        nextLevel === 3 ? 'Subcategory Level 3' :
+                                        `Subcategory Level ${nextLevel}`;
+
+                        const nextDropdown = createCategoryDropdown(nextLevel, labelText, nextCategory.id);
+                        categoryDropdowns.appendChild(nextDropdown);
+
+                        const nextSelect = document.getElementById(`category_${nextLevel}`);
+                        populateDropdown(nextSelect, subcategories, nextCategory.id);
+
+                        // Add change event listener
+                        nextSelect.addEventListener('change', function() {
+                            handleCategoryChange(nextLevel, this.value);
+                        });
+                    }
+                }
+
+                // Set final category_id
+                categoryId.value = originalHierarchy[originalHierarchy.length - 1].id;
+            }
+
+            // Initialize with original selections
+            restoreOriginalSelections();
+
+            // Add change event listener to root category
+            const rootSelect = document.getElementById('category_0');
+            rootSelect.addEventListener('change', function() {
+                handleCategoryChange(0, this.value);
+            });
+        });
+    </script>
 </body>
-</html> 
+</html>

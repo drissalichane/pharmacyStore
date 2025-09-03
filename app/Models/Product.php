@@ -28,14 +28,17 @@ class Product extends Model
         'manufacturer',
         'dosage_form',
         'strength',
+        'attributes',
         'sort_order',
-        'category_id'
+        'category_id',
+        'brand_id'
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'requires_prescription' => 'boolean',
         'images' => 'array',
+        'attributes' => 'array',
         'price' => 'decimal:2',
         'sale_price' => 'decimal:2',
     ];
@@ -43,6 +46,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function cartItems()
@@ -106,5 +114,23 @@ class Product extends Model
     public function scopeByCategory($query, $categoryId)
     {
         return $query->where('category_id', $categoryId);
+    }
+
+    public function scopeByBrand($query, $brandId)
+    {
+        return $query->where('brand_id', $brandId);
+    }
+
+    public function getBreadcrumbAttribute()
+    {
+        $breadcrumb = [];
+        $category = $this->category;
+
+        while ($category) {
+            array_unshift($breadcrumb, $category);
+            $category = $category->parent;
+        }
+
+        return $breadcrumb;
     }
 }

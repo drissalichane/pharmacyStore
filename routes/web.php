@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminLocationController;
 use App\Http\Controllers\Admin\AdminPharmacyImageController;
@@ -20,6 +21,7 @@ Route::get('/', function () {
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/category/{category}', [ProductController::class, 'category'])->name('products.category');
+Route::get('/api/categories/{category}/brands', [ProductController::class, 'getBrandsForCategory'])->name('api.categories.brands');
 
 // Map routes
 Route::get('/map', [MapController::class, 'index'])->name('map.index');
@@ -58,7 +60,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Categories management
     Route::resource('categories', AdminCategoryController::class);
-    
+
+    // Brands management
+    Route::resource('brands', AdminBrandController::class);
+
     // Orders management
     Route::resource('orders', AdminOrderController::class);
     Route::patch('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
@@ -74,6 +79,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Process cropped image for OCR
     Route::post('/process-cropped-image', [EmergencyInfoImageController::class, 'processCroppedImage'])->name('process-cropped-image');
+
+    // API endpoint for cascading categories
+    Route::get('/api/categories/subcategories/{parentId?}', [AdminCategoryController::class, 'getSubcategories'])->name('api.categories.subcategories');
 });
 
 require __DIR__.'/auth.php';
