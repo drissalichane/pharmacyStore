@@ -14,6 +14,8 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
+
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -26,8 +28,13 @@
                     <div class="flex">
                         <!-- Logo -->
                         <div class="flex-shrink-0 flex items-center">
-                            <a href="{{ route('home') }}" class="text-xl font-bold text-blue-600">
-                                <i class="fas fa-pills mr-2"></i>Pharmacy
+                            <a href="{{ route('home') }}" class="text-xl font-bold text-blue-600 flex items-center">
+@if(\App\Models\Setting::get('site_logo'))
+    <img src="{{ \App\Models\Setting::getLogoUrl() }}" alt="{{ \App\Models\Setting::getSiteName() }}" class="h-20 w-auto">
+@else
+    <i class="fas fa-pills mr-2"></i>
+    {{ \App\Models\Setting::getSiteName() }}
+@endif
                             </a>
                         </div>
 

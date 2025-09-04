@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminLocationController;
 use App\Http\Controllers\Admin\AdminPharmacyImageController;
 use App\Http\Controllers\Admin\EmergencyInfoImageController;
+use App\Http\Controllers\Admin\AdminSettingsController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -79,6 +80,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Process cropped image for OCR
     Route::post('/process-cropped-image', [EmergencyInfoImageController::class, 'processCroppedImage'])->name('process-cropped-image');
+
+    // Settings management
+    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/logo', [AdminSettingsController::class, 'uploadLogo'])->name('settings.upload-logo');
+    Route::delete('/settings/logo', [AdminSettingsController::class, 'removeLogo'])->name('settings.remove-logo');
 
     // API endpoint for cascading categories
     Route::get('/api/categories/subcategories/{parentId?}', [AdminCategoryController::class, 'getSubcategories'])->name('api.categories.subcategories');

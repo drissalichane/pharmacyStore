@@ -257,6 +257,16 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Settings Management -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Settings Management</h2>
+                <div class="space-y-3">
+                    <a href="{{ route('admin.settings.index') }}" class="block w-full bg-purple-600 text-white py-2 px-4 rounded-md text-center hover:bg-purple-700 transition-colors">
+                        Site Settings
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Recent Orders -->

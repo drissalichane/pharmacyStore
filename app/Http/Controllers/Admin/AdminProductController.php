@@ -11,9 +11,27 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category', 'brand')->latest()->paginate(15);
+        $query = Product::with('category', 'brand');
+
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%')
+                  ->orWhere('dosage_form', 'like', '%' . $search . '%')
+                  ->orWhere('strength', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Flexible pagination
+        $perPage = $request->get('per_page', 15);
+        $perPage = in_array($perPage, [10, 15, 25, 50, 100]) ? $perPage : 15;
+
+        $products = $query->latest()->paginate($perPage);
+
         return view('admin.products.index', compact('products'));
     }
 

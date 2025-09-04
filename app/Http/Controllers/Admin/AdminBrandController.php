@@ -10,9 +10,27 @@ use Illuminate\Support\Str;
 
 class AdminBrandController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $brands = Brand::latest()->paginate(15);
+        $query = Brand::query();
+
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+                  // Removed website column search because it does not exist in DB
+                  // ->orWhere('website', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Flexible pagination
+        $perPage = $request->get('per_page', 15);
+        $perPage = in_array($perPage, [10, 15, 25, 50, 100]) ? $perPage : 15;
+
+        $brands = $query->latest()->paginate($perPage);
+
         return view('admin.brands.index', compact('brands'));
     }
 

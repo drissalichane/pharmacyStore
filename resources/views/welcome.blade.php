@@ -7,34 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50" style="font-family: 'Ubuntu', sans-serif;">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="/" class="text-2xl font-bold text-gradient">Pharmacy Store</a>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="{{ route('products.index') }}" class="text-gray-700 hover:text-green-700 transition-colors">Products</a>
-                    <a href="/map" class="text-gray-700 hover:text-green-700 transition-colors">Locations</a>
-                    @auth
-                        <a href="{{ route('cart.index') }}" class="text-gray-700 hover:text-green-700 transition-colors">Cart</a>
-                        <a href="{{ route('orders.index') }}" class="text-gray-700 hover:text-green-700 transition-colors">Orders</a>
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="text-gray-700 hover:text-green-700 transition-colors">Logout</button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-green-700 transition-colors">Login</a>
-                        <a href="{{ route('register') }}" class="btn-custom btn-custom-primary">Register</a>
-                    @endauth
-                </div>
-            </div>
-        </div>
-    </nav>
+    @include('components.navbar')
 
     <!-- Hero Section -->
     <section class="bg-green-900 text-white py-16 lg:py-24">

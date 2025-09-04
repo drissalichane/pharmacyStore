@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Products - Pharmacy Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @vite('resources/js/products-live-search.js')
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
@@ -26,11 +27,44 @@
     </nav>
 
     <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Back Button -->
+        <div class="mb-6">
+            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Dashboard
+            </a>
+        </div>
+
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Products Management</h1>
             <a href="{{ route('admin.products.create') }}" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">
                 Add New Product
             </a>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-col md:flex-row gap-4" id="searchForm">
+                <div class="flex-1">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Products</label>
+                    <input type="text" id="search" name="search" value="{{ request('search') }}"
+                           placeholder="Search by name, description, dosage form, or strength..."
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
+                </div>
+                <div class="md:w-48">
+                    <label for="per_page" class="block text-sm font-medium text-gray-700 mb-1">Items per page</label>
+                    <select id="per_page" name="per_page"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10</option>
+                        <option value="15" {{ request('per_page') == '15' || !request('per_page') ? 'selected' : '' }}>15</option>
+                        <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
+                    </select>
+                </div>
+            </form>
         </div>
 
         @if(session('success'))
@@ -119,7 +153,14 @@
         </div>
 
         <div class="mt-6">
-            {{ $products->links() }}
+            <div class="results-info flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{ $products->total() }} results
+                </div>
+                <div class="pagination-container">
+                    {{ $products->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
     </div>
 

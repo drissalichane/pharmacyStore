@@ -112,6 +112,8 @@
     border-color: white;
   }
   
+
+  
   .btn-custom-outline {
     @apply text-white;
     border-color: white;
@@ -438,6 +440,49 @@
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
+}
+
+/* ===== CURSOR-BASED GLOW PULSE EFFECT ===== */
+
+.button-glow {
+  position: relative;
+  display: inline-block;
+  padding: 0.5em 1em;
+  background: transparent;
+  color: inherit;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: color 0.3s;
+  font-size: inherit;
+  border-radius: 8px;
+  z-index: 1;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.button-glow::before {
+  content: '';
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, #ccd6bf 10%, transparent 90%);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.4s ease;
+  border-radius: 50%;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.button-glow:hover::before {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.button-glow:hover {
+  color: #7ffd09ff;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* ===== GLOBAL OVERRIDES: remap Tailwind blue/purple utilities -> green tokens ===== */
