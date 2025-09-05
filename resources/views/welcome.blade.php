@@ -245,13 +245,19 @@
                 </button>
 
                 <!-- Brands Container -->
-                <div id="brands-container" class="overflow-hidden min-h-[300px]">
-                    <div id="brands-slider" class="flex flex-wrap transition-transform duration-300 ease-in-out">
-                        @foreach($featuredBrands as $index => $brand)
-                        <div class="flex-none w-1/4 p-4 cursor-pointer">
-                            <a href="#" class="block">
-                                <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="mx-auto h-24 object-contain">
-                            </a>
+                <div id="brands-container" class="overflow-hidden min-h-[300px] relative">
+                    <div id="brands-slider" class="flex transition-transform duration-300 ease-in-out w-full">
+                        @foreach($featuredBrands->chunk(8) as $brandChunk)
+                        <div class="flex-none w-full p-4">
+                            <div class="grid grid-cols-4 gap-4" style="min-width: 320px;">
+                                @foreach($brandChunk as $brand)
+                                <div class="cursor-pointer">
+                                    <a href="#" class="block">
+                                        <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="mx-auto h-32 object-contain w-28">
+                                    </a>
+                                </div>
+                                @endforeach
+                            </div>
                         </div>
                         @endforeach
                     </div>
@@ -423,9 +429,8 @@
             const brandsSlider = document.getElementById('brands-slider');
             const brandsPrevBtn = document.getElementById('brands-prev-btn');
             const brandsNextBtn = document.getElementById('brands-next-btn');
-            const brandsContainer = document.getElementById('brands-container');
 
-            if (!brandsSlider || !brandsPrevBtn || !brandsNextBtn || !brandsContainer) return;
+            if (!brandsSlider || !brandsPrevBtn || !brandsNextBtn) return;
 
             let brandsCurrentIndex = 0;
             const brandsTotal = {{ $featuredBrands->count() }};
@@ -459,6 +464,7 @@
 
             updateBrandsButtons();
         });
+
     </script>
 </body>
 </html>
