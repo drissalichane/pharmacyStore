@@ -12,11 +12,14 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        // Clear existing products
-        Product::query()->delete();
-
+        // Don't delete existing products - just add sample products
         $brands = Brand::all();
         $categories = Category::all();
+
+        if ($brands->isEmpty() || $categories->isEmpty()) {
+            $this->command->info('No brands or categories found. Please run BrandSeeder and CategorySeeder first.');
+            return;
+        }
 
         // Get categories by level for better organization
         $rootCategories = Category::whereNull('parent_id')->get();
@@ -33,21 +36,23 @@ class ProductSeeder extends Seeder
                 $q->whereNotNull('parent_id');
             })->get();
 
-        // Sample products for different category levels
-        $this->createMedicamentProducts($rootCategories->where('name', 'Médicaments')->first(), $brands, $level1Categories, $level2Categories, $level3Categories);
-        $this->createParapharmacieProducts($rootCategories->where('name', 'Parapharmacie')->first(), $brands, $level1Categories);
-        $this->createHygieneBeauteProducts($rootCategories->where('name', 'Hygiène & Beauté')->first(), $brands, $level1Categories);
-        $this->createMereBebeProducts($rootCategories->where('name', 'Mère & Bébé')->first(), $brands, $level1Categories);
+        // Create sample products for different categories
+        $this->createSampleProducts($brands, $categories, $rootCategories, $level1Categories, $level2Categories, $level3Categories);
+
+        $this->command->info('Sample products created successfully!');
     }
 
-    private function createMedicamentProducts($root, $brands, $level1Cats, $level2Cats, $level3Cats)
+    private function createSampleProducts($brands, $categories, $rootCategories, $level1Categories, $level2Categories, $level3Categories)
     {
-        // Products for different levels of the Médicaments category
-        $medicamentProducts = [
-            // Level 1 products (directly under Médicaments)
+        // Get some random categories and brands to use
+        $availableCategories = $categories->where('is_active', true)->shuffle();
+        $availableBrands = $brands->where('is_active', true)->shuffle();
+
+        // Sample products with different categories and brands
+        $sampleProducts = [
             [
                 'name' => 'Paracétamol 500mg',
-                'description' => 'Antalgique et antipyrétique',
+                'description' => 'Antalgique et antipyrétique pour soulager la douleur et la fièvre',
                 'price' => 5.50,
                 'sale_price' => null,
                 'stock_quantity' => 150,
@@ -58,10 +63,21 @@ class ProductSeeder extends Seeder
                 'side_effects' => 'Réactions allergiques rares',
                 'requires_prescription' => false,
                 'manufacturer' => 'Laboratoire Français',
-                'category' => $level1Cats->where('name', 'Analgésiques')->first(),
-                'brand' => $brands->where('name', 'Sanofi')->first(),
             ],
-            // Level 2 products
+            [
+                'name' => 'Ibuprofène 400mg',
+                'description' => 'Anti-inflammatoire non stéroïdien pour douleurs et fièvre',
+                'price' => 8.75,
+                'sale_price' => 7.50,
+                'stock_quantity' => 200,
+                'dosage_form' => 'Comprimé',
+                'strength' => '400mg',
+                'ingredients' => 'Ibuprofène',
+                'usage_instructions' => '1 comprimé 3 fois par jour après les repas',
+                'side_effects' => 'Irritation gastrique, maux de tête',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire International',
+            ],
             [
                 'name' => 'Amoxicilline 500mg',
                 'description' => 'Antibiotique de la famille des pénicillines',
@@ -75,69 +91,7 @@ class ProductSeeder extends Seeder
                 'side_effects' => 'Nausées, diarrhée, éruption cutanée',
                 'requires_prescription' => true,
                 'manufacturer' => 'Laboratoire Européen',
-                'category' => $level2Cats->where('name', 'Pénicillines')->first(),
-                'brand' => $brands->where('name', 'Pfizer')->first(),
             ],
-            // Level 3 products (deepest level)
-            [
-                'name' => 'Ibuprofène 400mg',
-                'description' => 'Anti-inflammatoire non stéroïdien',
-                'price' => 8.75,
-                'sale_price' => 7.50,
-                'stock_quantity' => 200,
-                'dosage_form' => 'Comprimé',
-                'strength' => '400mg',
-                'ingredients' => 'Ibuprofène',
-                'usage_instructions' => '1 comprimé 3 fois par jour après les repas',
-                'side_effects' => 'Irritation gastrique, maux de tête',
-                'requires_prescription' => false,
-                'manufacturer' => 'Laboratoire International',
-                'category' => $level3Cats->where('name', 'Ibuprofène')->first(),
-                'brand' => $brands->where('name', 'Bayer')->first(),
-            ],
-            [
-                'name' => 'Diclofénac 50mg',
-                'description' => 'Anti-inflammatoire pour douleurs musculaires',
-                'price' => 9.20,
-                'sale_price' => null,
-                'stock_quantity' => 120,
-                'dosage_form' => 'Comprimé gastro-résistant',
-                'strength' => '50mg',
-                'ingredients' => 'Diclofénac sodique',
-                'usage_instructions' => '1 comprimé 2-3 fois par jour',
-                'side_effects' => 'Troubles digestifs, étourdissements',
-                'requires_prescription' => false,
-                'manufacturer' => 'Laboratoire Allemand',
-                'category' => $level3Cats->where('name', 'Diclofénac')->first(),
-                'brand' => $brands->where('name', 'Novartis')->first(),
-            ],
-        ];
-
-        foreach ($medicamentProducts as $product) {
-            if ($product['category']) {
-                Product::create([
-                    'name' => $product['name'],
-                    'description' => $product['description'],
-                    'price' => $product['price'],
-                    'sale_price' => $product['sale_price'],
-                    'stock_quantity' => $product['stock_quantity'],
-                    'dosage_form' => $product['dosage_form'],
-                    'strength' => $product['strength'],
-                    'ingredients' => $product['ingredients'],
-                    'usage_instructions' => $product['usage_instructions'],
-                    'side_effects' => $product['side_effects'],
-                    'requires_prescription' => $product['requires_prescription'],
-                    'manufacturer' => $product['manufacturer'],
-                    'category_id' => $product['category']->id,
-                    'brand_id' => $product['brand'] ? $product['brand']->id : null,
-                ]);
-            }
-        }
-    }
-
-    private function createParapharmacieProducts($root, $brands, $level1Cats)
-    {
-        $parapharmacieProducts = [
             [
                 'name' => 'Crème Hydratante Visage',
                 'description' => 'Crème hydratante pour tous types de peau',
@@ -151,8 +105,6 @@ class ProductSeeder extends Seeder
                 'side_effects' => 'Aucun connu',
                 'requires_prescription' => false,
                 'manufacturer' => 'Laboratoire Français',
-                'category' => $level1Cats->where('name', 'Soins du visage')->first(),
-                'brand' => $brands->where('name', 'La Roche-Posay')->first(),
             ],
             [
                 'name' => 'Shampooing Anti-Pelliculaire',
@@ -167,36 +119,7 @@ class ProductSeeder extends Seeder
                 'side_effects' => 'Irritation oculaire possible',
                 'requires_prescription' => false,
                 'manufacturer' => 'Laboratoire Cosmétique',
-                'category' => $level1Cats->where('name', 'Cheveux')->first(),
-                'brand' => $brands->where('name', 'Vichy')->first(),
             ],
-        ];
-
-        foreach ($parapharmacieProducts as $product) {
-            if ($product['category']) {
-                Product::create([
-                    'name' => $product['name'],
-                    'description' => $product['description'],
-                    'price' => $product['price'],
-                    'sale_price' => $product['sale_price'],
-                    'stock_quantity' => $product['stock_quantity'],
-                    'dosage_form' => $product['dosage_form'],
-                    'strength' => $product['strength'],
-                    'ingredients' => $product['ingredients'],
-                    'usage_instructions' => $product['usage_instructions'],
-                    'side_effects' => $product['side_effects'],
-                    'requires_prescription' => $product['requires_prescription'],
-                    'manufacturer' => $product['manufacturer'],
-                    'category_id' => $product['category']->id,
-                    'brand_id' => $product['brand'] ? $product['brand']->id : null,
-                ]);
-            }
-        }
-    }
-
-    private function createHygieneBeauteProducts($root, $brands, $level1Cats)
-    {
-        $hygieneProducts = [
             [
                 'name' => 'Dentifrice Blancur',
                 'description' => 'Dentifrice au fluor pour dents blanches',
@@ -210,52 +133,7 @@ class ProductSeeder extends Seeder
                 'side_effects' => 'Aucun aux doses recommandées',
                 'requires_prescription' => false,
                 'manufacturer' => 'Laboratoire Dentaire',
-                'category' => $level1Cats->where('name', 'Hygiène buccale')->first(),
-                'brand' => $brands->where('name', 'Johnson & Johnson')->first(),
             ],
-            [
-                'name' => 'Déodorant Roll-On',
-                'description' => 'Déodorant anti-transpirant longue durée',
-                'price' => 8.50,
-                'sale_price' => 7.20,
-                'stock_quantity' => 120,
-                'dosage_form' => 'Roll-on',
-                'strength' => '48h protection',
-                'ingredients' => 'Aqua, Aluminum Chlorohydrate, Parfum',
-                'usage_instructions' => 'Appliquer sur aisselles sèches',
-                'side_effects' => 'Irritation cutanée possible',
-                'requires_prescription' => false,
-                'manufacturer' => 'Laboratoire Cosmétique',
-                'category' => $level1Cats->where('name', 'Déodorants')->first(),
-                'brand' => $brands->where('name', 'Bioderma')->first(),
-            ],
-        ];
-
-        foreach ($hygieneProducts as $product) {
-            if ($product['category']) {
-                Product::create([
-                    'name' => $product['name'],
-                    'description' => $product['description'],
-                    'price' => $product['price'],
-                    'sale_price' => $product['sale_price'],
-                    'stock_quantity' => $product['stock_quantity'],
-                    'dosage_form' => $product['dosage_form'],
-                    'strength' => $product['strength'],
-                    'ingredients' => $product['ingredients'],
-                    'usage_instructions' => $product['usage_instructions'],
-                    'side_effects' => $product['side_effects'],
-                    'requires_prescription' => $product['requires_prescription'],
-                    'manufacturer' => $product['manufacturer'],
-                    'category_id' => $product['category']->id,
-                    'brand_id' => $product['brand'] ? $product['brand']->id : null,
-                ]);
-            }
-        }
-    }
-
-    private function createMereBebeProducts($root, $brands, $level1Cats)
-    {
-        $bebeProducts = [
             [
                 'name' => 'Lait Infantile 1er âge',
                 'description' => 'Lait infantile pour nourrissons de 0 à 6 mois',
@@ -269,8 +147,6 @@ class ProductSeeder extends Seeder
                 'side_effects' => 'Respecter les doses recommandées',
                 'requires_prescription' => false,
                 'manufacturer' => 'Laboratoire Pédiatrique',
-                'category' => $level1Cats->where('name', 'Alimentation')->first(),
-                'brand' => $brands->where('name', 'Mustela')->first(),
             ],
             [
                 'name' => 'Crème Change Bébé',
@@ -285,30 +161,205 @@ class ProductSeeder extends Seeder
                 'side_effects' => 'Aucun connu',
                 'requires_prescription' => false,
                 'manufacturer' => 'Laboratoire Pédiatrique',
-                'category' => $level1Cats->where('name', 'Hygiène bébé')->first(),
-                'brand' => $brands->where('name', 'Avène')->first(),
+            ],
+            [
+                'name' => 'Déodorant Roll-On',
+                'description' => 'Déodorant anti-transpirant longue durée',
+                'price' => 8.50,
+                'sale_price' => 7.20,
+                'stock_quantity' => 120,
+                'dosage_form' => 'Roll-on',
+                'strength' => '48h protection',
+                'ingredients' => 'Aqua, Aluminum Chlorohydrate, Parfum',
+                'usage_instructions' => 'Appliquer sur aisselles sèches',
+                'side_effects' => 'Irritation cutanée possible',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Cosmétique',
+            ],
+            [
+                'name' => 'Vitamine C 1000mg',
+                'description' => 'Complément alimentaire pour renforcer les défenses immunitaires',
+                'price' => 15.90,
+                'sale_price' => 12.90,
+                'stock_quantity' => 110,
+                'dosage_form' => 'Comprimé',
+                'strength' => '1000mg',
+                'ingredients' => 'Acide ascorbique, Excipients',
+                'usage_instructions' => '1 comprimé par jour avec un verre d\'eau',
+                'side_effects' => 'Troubles digestifs à fortes doses',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Nutritionnel',
+            ],
+            [
+                'name' => 'Bandage Adhésif',
+                'description' => 'Pansements adhésifs stériles pour plaies superficielles',
+                'price' => 4.50,
+                'sale_price' => null,
+                'stock_quantity' => 200,
+                'dosage_form' => 'Pansement',
+                'strength' => null,
+                'ingredients' => 'Tissu non-tissé, Adhésif hypoallergénique',
+                'usage_instructions' => 'Nettoyer la plaie et appliquer le pansement',
+                'side_effects' => 'Irritation cutanée rare',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Médical',
+            ],
+            [
+                'name' => 'Savon surgras',
+                'description' => 'Savon doux pour peaux sensibles',
+                'price' => 7.20,
+                'sale_price' => null,
+                'stock_quantity' => 90,
+                'dosage_form' => 'Savon',
+                'strength' => null,
+                'ingredients' => 'Sodium Palmate, Aqua, Glycerin',
+                'usage_instructions' => 'Utiliser quotidiennement pour la toilette',
+                'side_effects' => 'Aucun connu',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Cosmétique',
+            ],
+            [
+                'name' => 'Crème Solaire SPF50',
+                'description' => 'Protection solaire haute protection',
+                'price' => 19.90,
+                'sale_price' => 16.90,
+                'stock_quantity' => 65,
+                'dosage_form' => 'Crème',
+                'strength' => 'SPF50',
+                'ingredients' => 'Aqua, Octyldodecanol, Zinc Oxide, Titanium Dioxide',
+                'usage_instructions' => 'Appliquer généreusement 20 minutes avant l\'exposition',
+                'side_effects' => 'Aucun connu',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Dermatologique',
+            ],
+            [
+                'name' => 'Eau Thermale',
+                'description' => 'Eau thermale apaisante en spray',
+                'price' => 8.90,
+                'sale_price' => null,
+                'stock_quantity' => 130,
+                'dosage_form' => 'Spray',
+                'strength' => null,
+                'ingredients' => 'Eau thermale 100%',
+                'usage_instructions' => 'Vaporiser sur la peau propre',
+                'side_effects' => 'Aucun connu',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Thermal',
+            ],
+            [
+                'name' => 'Gélule Omega 3',
+                'description' => 'Acides gras essentiels pour la santé cardiovasculaire',
+                'price' => 22.50,
+                'sale_price' => 18.90,
+                'stock_quantity' => 70,
+                'dosage_form' => 'Gélule',
+                'strength' => '1000mg',
+                'ingredients' => 'Huile de poisson, Gélatine, Glycérine',
+                'usage_instructions' => '1 gélule par jour pendant les repas',
+                'side_effects' => 'Légers troubles digestifs',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Nutritionnel',
+            ],
+            [
+                'name' => 'Pansement Hydrocolloïde',
+                'description' => 'Pansement moderne pour plaies exsudatives',
+                'price' => 12.90,
+                'sale_price' => null,
+                'stock_quantity' => 85,
+                'dosage_form' => 'Pansement',
+                'strength' => null,
+                'ingredients' => 'Hydrocolloïde, Film polyuréthane',
+                'usage_instructions' => 'Appliquer sur plaie propre et sèche',
+                'side_effects' => 'Macération possible',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Médical',
+            ],
+            [
+                'name' => 'Shampooing Bébé',
+                'description' => 'Shampooing doux sans larmes pour bébé',
+                'price' => 9.90,
+                'sale_price' => 8.50,
+                'stock_quantity' => 95,
+                'dosage_form' => 'Shampooing',
+                'strength' => null,
+                'ingredients' => 'Aqua, Coco-Glucoside, Glycérine',
+                'usage_instructions' => 'Appliquer sur cheveux mouillés, rincer abondamment',
+                'side_effects' => 'Aucun connu',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Pédiatrique',
+            ],
+            [
+                'name' => 'Crème Anti-âge',
+                'description' => 'Crème anti-rides pour peau mature',
+                'price' => 45.90,
+                'sale_price' => 38.90,
+                'stock_quantity' => 40,
+                'dosage_form' => 'Crème',
+                'strength' => null,
+                'ingredients' => 'Aqua, Retinol, Hyaluronic Acid, Vitamine E',
+                'usage_instructions' => 'Appliquer le soir sur peau nettoyée',
+                'side_effects' => 'Irritation légère possible',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Cosmétique',
+            ],
+            [
+                'name' => 'Bain de Bouche',
+                'description' => 'Bain de bouche au fluor pour hygiène buccale',
+                'price' => 7.50,
+                'sale_price' => null,
+                'stock_quantity' => 110,
+                'dosage_form' => 'Solution',
+                'strength' => '250ppm Fluor',
+                'ingredients' => 'Aqua, Alcohol, Sodium Fluoride, Aromas',
+                'usage_instructions' => 'Se gargariser 30 secondes 2 fois par jour',
+                'side_effects' => 'Sensation de brûlure temporaire',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Dentaire',
+            ],
+            [
+                'name' => 'Complément Fer',
+                'description' => 'Complément alimentaire riche en fer',
+                'price' => 14.90,
+                'sale_price' => 12.50,
+                'stock_quantity' => 75,
+                'dosage_form' => 'Comprimé',
+                'strength' => '14mg Fer',
+                'ingredients' => 'Fer bisglycinate, Acide ascorbique, Excipients',
+                'usage_instructions' => '1 comprimé par jour avec un repas',
+                'side_effects' => 'Constipation, nausées',
+                'requires_prescription' => false,
+                'manufacturer' => 'Laboratoire Nutritionnel',
             ],
         ];
 
-        foreach ($bebeProducts as $product) {
-            if ($product['category']) {
-                Product::create([
-                    'name' => $product['name'],
-                    'description' => $product['description'],
-                    'price' => $product['price'],
-                    'sale_price' => $product['sale_price'],
-                    'stock_quantity' => $product['stock_quantity'],
-                    'dosage_form' => $product['dosage_form'],
-                    'strength' => $product['strength'],
-                    'ingredients' => $product['ingredients'],
-                    'usage_instructions' => $product['usage_instructions'],
-                    'side_effects' => $product['side_effects'],
-                    'requires_prescription' => $product['requires_prescription'],
-                    'manufacturer' => $product['manufacturer'],
-                    'category_id' => $product['category']->id,
-                    'brand_id' => $product['brand'] ? $product['brand']->id : null,
-                ]);
+        // Create products with random categories and brands
+        foreach ($sampleProducts as $index => $productData) {
+            // Skip if product already exists
+            if (Product::where('name', $productData['name'])->exists()) {
+                continue;
             }
+
+            // Get random category and brand
+            $randomCategory = $availableCategories->get($index % $availableCategories->count());
+            $randomBrand = $availableBrands->get($index % $availableBrands->count());
+
+            Product::create([
+                'name' => $productData['name'],
+                'description' => $productData['description'],
+                'price' => $productData['price'],
+                'sale_price' => $productData['sale_price'],
+                'stock_quantity' => $productData['stock_quantity'],
+                'dosage_form' => $productData['dosage_form'],
+                'strength' => $productData['strength'],
+                'ingredients' => $productData['ingredients'],
+                'usage_instructions' => $productData['usage_instructions'],
+                'side_effects' => $productData['side_effects'],
+                'requires_prescription' => $productData['requires_prescription'],
+                'manufacturer' => $productData['manufacturer'],
+                'category_id' => $randomCategory->id,
+                'brand_id' => $randomBrand->id,
+                'is_active' => true,
+            ]);
         }
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
@@ -14,9 +15,7 @@ use App\Http\Controllers\Admin\AdminPharmacyImageController;
 use App\Http\Controllers\Admin\EmergencyInfoImageController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

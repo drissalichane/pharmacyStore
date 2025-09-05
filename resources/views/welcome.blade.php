@@ -125,103 +125,145 @@
                     Discover our most popular healthcare products trusted by thousands of customers
                 </p>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <!-- Sample Featured Products -->
-                <div class="card-custom bg-white rounded-lg overflow-hidden hover-lift scroll-animate">
-                    <div class="h-48 bg-gray-200 flex items-center justify-center">
-                        <div class="text-4xl text-gray-400">💊</div>
-                    </div>
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Pain Relief</span>
+
+            @if($featuredProducts->count() > 0)
+            <div class="relative">
+                <!-- Navigation Arrows -->
+                <button id="prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+
+                <button id="next-btn" class="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+
+                <!-- Products Container -->
+                <div id="products-container" class="overflow-hidden min-h-[500px]">
+                    <div id="products-slider" class="flex transition-transform duration-300 ease-in-out">
+                        @foreach($featuredProducts as $index => $product)
+                        <div class="flex-none w-full md:w-1/2 lg:w-1/3 xl:w-1/4 px-3">
+                            <div class="card-custom bg-white rounded-lg overflow-hidden hover-lift scroll-animate">
+                                <div class="h-48 bg-gray-200 flex items-center justify-center">
+                                    @if($product->image)
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="text-4xl text-gray-400">
+                                            @if($product->category && $product->category->name)
+                                                @switch($product->category->name)
+                                                    @case('Medications')
+                                                        💊
+                                                        @break
+                                                    @case('Vitamins & Supplements')
+                                                        🌿
+                                                        @break
+                                                    @case('Medical Supplies')
+                                                        🩹
+                                                        @break
+                                                    @case('Personal Care')
+                                                        🧴
+                                                        @break
+                                                    @default
+                                                        📦
+                                                @endswitch
+                                            @else
+                                                📦
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        @if($product->category)
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">{{ $product->category->name }}</span>
+                                        @else
+                                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">General</span>
+                                        @endif
+                                    </div>
+                                    <h3 class="font-semibold text-lg mb-2">{{ $product->name }}</h3>
+                                    <p class="text-gray-600 text-sm mb-3">{{ Str::limit($product->description, 60) }}</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-lg font-bold text-gray-900">${{ number_format($product->current_price, 2) }}</span>
+                                        <span class="text-sm {{ $product->stock_quantity > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $product->stock_quantity > 0 ? 'In Stock' : 'Out of Stock' }}
+                                        </span>
+                                    </div>
+                                    <div class="mt-4">
+                                        <a href="{{ route('products.show', $product) }}" class="btn-custom btn-custom-primary w-full block text-center">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="font-semibold text-lg mb-2">Aspirin 500mg</h3>
-                        <p class="text-gray-600 text-sm mb-3">Effective pain relief and fever reduction</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold text-gray-900">$8.99</span>
-                            <span class="text-sm text-green-600">In Stock</span>
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary w-full block text-center">
-                                View Details
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-custom bg-white rounded-lg overflow-hidden hover-lift scroll-animate delay-100">
-                    <div class="h-48 bg-gray-200 flex items-center justify-center">
-                        <div class="text-4xl text-gray-400">🌿</div>
-                    </div>
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Vitamins</span>
-                        </div>
-                        <h3 class="font-semibold text-lg mb-2">Vitamin C 1000mg</h3>
-                        <p class="text-gray-600 text-sm mb-3">Immune system support and antioxidant</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold text-gray-900">$12.99</span>
-                            <span class="text-sm text-green-600">In Stock</span>
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary w-full block text-center">
-                                View Details
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-custom bg-white rounded-lg overflow-hidden hover-lift scroll-animate delay-200">
-                    <div class="h-48 bg-gray-200 flex items-center justify-center">
-                        <div class="text-4xl text-gray-400">🩹</div>
-                    </div>
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">First Aid</span>
-                        </div>
-                        <h3 class="font-semibold text-lg mb-2">Band-Aid Assorted</h3>
-                        <p class="text-gray-600 text-sm mb-3">Sterile adhesive bandages for minor cuts</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold text-gray-900">$5.99</span>
-                            <span class="text-sm text-green-600">In Stock</span>
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary w-full block text-center">
-                                View Details
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-custom bg-white rounded-lg overflow-hidden hover-lift scroll-animate delay-300">
-                    <div class="h-48 bg-gray-200 flex items-center justify-center">
-                        <div class="text-4xl text-gray-400">🧴</div>
-                    </div>
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Personal Care</span>
-                        </div>
-                        <h3 class="font-semibold text-lg mb-2">Hand Sanitizer</h3>
-                        <p class="text-gray-600 text-sm mb-3">Kills 99.9% of germs and bacteria</p>
-                        <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold text-gray-900">$4.99</span>
-                            <span class="text-sm text-green-600">In Stock</span>
-                        </div>
-                        <div class="mt-4">
-                            <a href="{{ route('products.index') }}" class="btn-custom btn-custom-primary w-full block text-center">
-                                View Details
-                            </a>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
-            
+            @else
+            <div class="text-center py-12">
+                <div class="text-6xl mb-4">📦</div>
+                <h3 class="text-xl font-semibold mb-2">No Products Available</h3>
+                <p class="text-gray-600">Check back soon for our featured products!</p>
+            </div>
+            @endif
+
             <div class="text-center mt-8 scroll-animate delay-400">
                 <a href="{{ route('products.index') }}" class="btn-custom btn-custom-ghost text-lg">
                     View All Products
                 </a>
             </div>
+        </div>
+    </section>
+
+    <!-- Featured Brands Section -->
+    <section class="py-8 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12 scroll-animate">
+                <h2 class="text-3xl font-bold mb-4">Featured Brands</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    Discover trusted brands we proudly feature
+                </p>
+            </div>
+
+            @if($featuredBrands->count() > 0)
+            <div class="relative">
+                <!-- Navigation Arrows -->
+                <button id="brands-prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+
+                <button id="brands-next-btn" class="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+
+                <!-- Brands Container -->
+                <div id="brands-container" class="overflow-hidden min-h-[300px]">
+                    <div id="brands-slider" class="flex flex-wrap transition-transform duration-300 ease-in-out">
+                        @foreach($featuredBrands as $index => $brand)
+                        <div class="flex-none w-1/4 p-4 cursor-pointer">
+                            <a href="#" class="block">
+                                <img src="{{ $brand->logo }}" alt="{{ $brand->name }}" class="mx-auto h-24 object-contain">
+                            </a>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="text-center py-12">
+                <div class="text-6xl mb-4">🏷️</div>
+                <h3 class="text-xl font-semibold mb-2">No Brands Available</h3>
+                <p class="text-gray-600">Check back soon for our featured brands!</p>
+            </div>
+            @endif
         </div>
     </section>
 
@@ -324,6 +366,98 @@
                     });
                 }
             });
+        });
+
+        // Featured Products Slideshow
+        document.addEventListener('DOMContentLoaded', () => {
+            const slider = document.getElementById('products-slider');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const container = document.getElementById('products-container');
+
+            if (!slider || !prevBtn || !nextBtn || !container) return;
+
+            let currentIndex = 0;
+            const totalProducts = {{ $featuredProducts->count() }};
+            const productsPerView = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+            const maxIndex = Math.max(0, totalProducts - productsPerView);
+
+            function updateButtons() {
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex >= maxIndex;
+            }
+
+            function updateSlider() {
+                const translateX = -currentIndex * (100 / productsPerView);
+                slider.style.transform = `translateX(${translateX}%)`;
+                updateButtons();
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateSlider();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentIndex < maxIndex) {
+                    currentIndex++;
+                    updateSlider();
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const newProductsPerView = window.innerWidth >= 1280 ? 4 : window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+                if (newProductsPerView !== productsPerView) {
+                    location.reload(); // Simple solution for responsive changes
+                }
+            });
+
+            updateButtons();
+        });
+
+        // Featured Brands Slideshow
+        document.addEventListener('DOMContentLoaded', () => {
+            const brandsSlider = document.getElementById('brands-slider');
+            const brandsPrevBtn = document.getElementById('brands-prev-btn');
+            const brandsNextBtn = document.getElementById('brands-next-btn');
+            const brandsContainer = document.getElementById('brands-container');
+
+            if (!brandsSlider || !brandsPrevBtn || !brandsNextBtn || !brandsContainer) return;
+
+            let brandsCurrentIndex = 0;
+            const brandsTotal = {{ $featuredBrands->count() }};
+            const brandsPerView = 8; // 4 columns x 2 rows = 8 brands per view
+            const brandsMaxIndex = Math.max(0, Math.ceil(brandsTotal / brandsPerView) - 1);
+
+            function updateBrandsButtons() {
+                brandsPrevBtn.disabled = brandsCurrentIndex === 0;
+                brandsNextBtn.disabled = brandsCurrentIndex >= brandsMaxIndex;
+            }
+
+            function updateBrandsSlider() {
+                const translateX = -brandsCurrentIndex * 100;
+                brandsSlider.style.transform = `translateX(${translateX}%)`;
+                updateBrandsButtons();
+            }
+
+            brandsPrevBtn.addEventListener('click', () => {
+                if (brandsCurrentIndex > 0) {
+                    brandsCurrentIndex--;
+                    updateBrandsSlider();
+                }
+            });
+
+            brandsNextBtn.addEventListener('click', () => {
+                if (brandsCurrentIndex < brandsMaxIndex) {
+                    brandsCurrentIndex++;
+                    updateBrandsSlider();
+                }
+            });
+
+            updateBrandsButtons();
         });
     </script>
 </body>

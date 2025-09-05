@@ -23,6 +23,12 @@
           <i class="fas fa-user-circle"></i>
           <span>My Account</span>
         </a>
+        @if(auth()->user()->isAdmin())
+          <a href="{{ route('admin.dashboard') }}" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2" role="menuitem" tabindex="-1" id="menu-item-admin">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Admin Dashboard</span>
+          </a>
+        @endif
         <form method="POST" action="{{ route('logout') }}">
           @csrf
           <button type="submit" class="w-full text-left text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2" role="menuitem" tabindex="-1" id="menu-item-1">
